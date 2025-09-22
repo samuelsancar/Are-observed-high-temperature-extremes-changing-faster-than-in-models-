@@ -3,7 +3,7 @@
 ---------
 Code to calculate trends in ERA5 daily tasmax tailwidths.
 
-To run: python ERA5_trends_calc [1958] [2023]
+To run: python ERA5_trend_calc [1958] [2023]
 
 """
 

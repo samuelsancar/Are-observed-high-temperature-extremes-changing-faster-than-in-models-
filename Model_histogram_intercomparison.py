@@ -14,11 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 import glob
+import os
 from Lat_Land_mask_function import lat_land_mask
 
-# Read command-line arguments
-t1 = int(sys.argv[1])
-t2 = int(sys.argv[2])
 variable = 'daily_maximum_2m_temperature'
 reanalysis = 'era5'
 
@@ -26,55 +24,80 @@ reanalysis = 'era5'
 template_cube = iris.load_cube('template_cube_1deg.nc')
 
 # Load and regrid ERA5 trend data
-datadir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends/'
-era5_cube = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
-era5_regridded = era5_cube.regrid(template_cube, iris.analysis.Linear())
+datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+era5_cube = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_p_1958-2023.nc")
+
+datadir_jra = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+jra_cube = iris.load_cube(f"{datadir_jra}jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_p_1958-2023.nc")
 
 # Apply land and latitude mask to ERA5
-era5_masked_cube, _ = lat_land_mask(era5_regridded, -60)
+era5_masked_cube = era5_cube
 era5_data = era5_masked_cube.data.flatten()
 era5_data = era5_data[~np.isnan(era5_data)]
 
 # Load and regrid model cubes
-coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/trends/Trend_significance/*_hist-1950_*'))
-sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/trends/Trend_significance/*_highresSST-present_*'))
+coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/*_hist-1950_*_p_1958.nc'))
+sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/*_highresSST-present_*_p_1958.nc'))
 
-coupled_data = [iris.load_cube(f).regrid(template_cube, iris.analysis.Linear()) for f in coupled_filenames]
-sst_data = [iris.load_cube(f).regrid(template_cube, iris.analysis.Linear()) for f in sst_filenames]
+coupled_data = [iris.load_cube(f) for f in coupled_filenames]
+sst_data = [iris.load_cube(f) for f in sst_filenames]
 
 significant_gridpoints = []
 
-for f in coupled_filenames:
-    sig_gridpoints = f.data > 0.05
-    sum_sig_gridpoints = np.sum(sig_gridpoints)
+for filename in coupled_filenames:
+    cube = iris.load_cube(filename)
+    model_name = os.path.basename(filename)
+    sig_gridpoints = cube.data < 0.05
+    sum_sig_gridpoints = np.count_nonzero(sig_gridpoints)
+    print(f"Significant grid points in {model_name}: {sum_sig_gridpoints}")
     significant_gridpoints.append(sum_sig_gridpoints)
 
-for f in sst_filenames:
-    sig_gridpoints = f.data > 0.05
-    sum_sig_gridpoints = np.sum(sig_gridpoints)
+for filename in sst_filenames:
+    cube = iris.load_cube(filename)
+    model_name = os.path.basename(filename)
+    sig_gridpoints = cube.data < 0.05
+    sum_sig_gridpoints = np.count_nonzero(sig_gridpoints)
+    print(f"Significant grid points in {model_name}: {sum_sig_gridpoints}")
     significant_gridpoints.append(sum_sig_gridpoints)
 
-era5_sig_gridpoints = era5_masked_cube.data > 0.05
-sum_era5_sig_gridpoints = np.sum(era5_sig_gridpoints)
+
+era5_sig_gridpoints = era5_data.data < 0.05
+sum_era5_sig_gridpoints = np.count_nonzero(era5_sig_gridpoints)
 significant_gridpoints.append(sum_era5_sig_gridpoints)
-    
-plt.figure(figsize=(10, 6))
-counts, bins, patches = plt.hist(significant_gridpoints, bins=33, color='blue', alpha=0.7)
 
-# Find the bin that contains the value 60
-bin_index = np.digitize(sum_era5_sig_gridpoints, bins) - 1
-bin_center = (bins[bin_index] + bins[bin_index + 1]) / 2
-frequency = counts[bin_index]
+jra_sig_gridpoints = jra_cube.data < 0.05
+sum_jra_sig_gridpoints = np.count_nonzero(jra_sig_gridpoints)
+significant_gridpoints.append(sum_jra_sig_gridpoints)
 
-# Annotate the histogram at value 60
-plt.text(bin_center, frequency, f'{frequency:.0f}', ha='center', va='bottom', color='red')
-plt.axvline(x=60, color='red', linestyle='--', label='Value 60')
-plt.legend()
+# Create the histogram
+plt.figure(figsize=(12, 7))
+counts, bins, patches = plt.hist(significant_gridpoints,bins=200,range=(0, 12000),histtype='bar',color='blue',alpha=0.85,edgecolor='black')
 
-plt.xlabel('Number of Significant Grid Points')
-plt.ylabel('Number of Models')
-plt.label()
-plt.title(f'Histogram of Significant Grid Points in Tail Width Trends ({t1}–{t2})')
-plt.grid(True)
+# Annotate the histogram at ERA5 value
+plt.axvline(x=sum_era5_sig_gridpoints,color='red',linestyle='--',linewidth=2,label='ERA5 Value')
+plt.text(sum_era5_sig_gridpoints + 50,max(counts) * 0.9,'ERA5',color='red',fontsize=12)
+
+# Annotate the histogram at JRA-55 value
+plt.axvline(x=sum_jra_sig_gridpoints,color='red',linestyle='--',linewidth=2,label='JRA-5 Value')
+plt.text(sum_jra_sig_gridpoints + 50,max(counts) * 0.9,'JRA-55',color='red',fontsize=12)
+
+# Add labels and title with improved font styling
+plt.xlabel('Number of Significant Grid Points', fontsize=14, fontweight='bold')
+plt.ylabel('Number of Models', fontsize=14, fontweight='bold')
+plt.title('Histogram of Significant Grid Points in Tail Width Trends (1958–2022)', fontsize=16, fontweight='bold')
+
+# Customize ticks and grid
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.6)
+
+# Add legend with better styling
+plt.legend(fontsize=12, loc='upper right')
+
+# Improve layout
 plt.tight_layout()
+
+# Show the plot
 plt.show()
+
+

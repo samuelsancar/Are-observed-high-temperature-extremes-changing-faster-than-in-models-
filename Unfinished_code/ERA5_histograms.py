@@ -3,6 +3,7 @@
 ---------
 Plot histogram in tail widths trends of ERA5 data.
 To run: python plot_tailwidth_trend.py [1958] [2023]
+
 """
 
 import iris
@@ -11,53 +12,70 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as mpl_cm
 import numpy as np
 import xarray as xr
+from Lat_Land_mask_function import lat_land_mask
 
 # Read command-line arguments
 reanalysis = 'era5'
 t1 = int(sys.argv[1])
 t2 = int(sys.argv[2])
-sig = sys.argv[3]
+#sig = sys.argv[3]
 variable = 'daily_maximum_2m_temperature'
 
 # Load trend data
 datadir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends/'
 trend = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
-template = xr.open_dataset('template_cube_1deg.nc')
 
-# Regrid ERA5 trend
-trend_interp = trend.interp(latitude=template.latitude, longitude=template.longitude, method="nearest")
+# Apply latitude and land mask using function
+masked_trend, _ = lat_land_mask(trend, -60)
 
-# Download sea mask
-lsm = xr.open_dataset('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')['lsm'].squeeze()
-lsm_interp = lsm.interp(latitude=template.latitude, longitude=template.longitude, method="nearest")
-
-# Create a 2D mask for latitudes >= -60 (exclude Antarctica)
-latitudes = template.latitude.values
-lat_mask = latitudes >= -60
-lat_mask_2d = np.repeat(lat_mask[:, np.newaxis], lsm_interp.shape[1], axis=1)
-
-# Apply land and latitude mask
-combined_mask = (lsm_interp > 0.5) & lat_mask_2d
-masked_trend = trend_interp.where(combined_mask)
-
-# Extract trend data
+# Extract masked_trend data
 trend_var = list(masked_trend.data_vars)[0]
 trend_data = masked_trend[trend_var].values.flatten()
 trend_data = trend_data[~np.isnan(trend_data)]  # Remove NaNs
 
-# Plot histogram
+# Load and regrid model cubes
+coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*'))
+sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*'))
+
+coupled_data = [iris.load_cube(f) for f in coupled_filenames]
+sst_data = [iris.load_cube(f) for f in sst_filenames]
+
+
+
 plt.figure(figsize=(10, 6))
-plt.hist(trend_data, bins=100, range=(trend_data.min(), trend_data.max()))
-#plt.yscale('log')
+for f in coupled_data:
+    masked_model, _ = lat_land_mask(f, -60)
+    model_data = masked_model.data.flatten()
+    model_data = model_data[~np.isnan(model_data)]
+    plt.hist(model_data, bins=100, histtype= 'line', alpha=0.3)
+    
+plt.hist(trend_data_data, bins=100, histtype= 'step', color='red', alpha=0.3)
 plt.xlabel('Trend magnitude (°C per decade)')
 plt.ylabel('Number of grid points')
-plt.title('ERA5 Tail Width Trend Histogram (1958–2023)')
+plt.title('ERA5 Tail Width Trend Histogram (1958–2022)')
+plt.grid(True)
+plt.tight_layout()
+plt.show() 
+    
+    
+plt.figure(figsize=(10, 6))
+for f in sst_data:
+    masked_model, _ = lat_land_mask(f, -60)
+    model_data = masked_model.data.flatten()
+    model_data = model_data[~np.isnan(model_data)]
+    plt.hist(model_data, bins=100, histtype= 'line', alpha=0.3)
+    
+plt.hist(trend_data_data, bins=100, histtype= 'step', color='red', alpha=0.3)
+plt.xlabel('Trend magnitude (°C per decade)')
+plt.ylabel('Number of grid points')
+plt.title('ERA5 Tail Width Trend Histogram (1958–2022)')
 plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-lon = trend['longitude'].values
-lat = trend['latitude'].values
+
+lon = masked_trend['longitude'].values
+lat = masked_trend['latitude'].values
 lon2d, lat2d = np.meshgrid(lon, lat)
 
 # Load significance mask based on user input
@@ -73,7 +91,7 @@ else:
 
 stat_sig_points = masked_trend.where(statsig)
 
-# Extract trend data
+# Extract masked_trend data
 sig_trend_var = list(stat_sig_points.data_vars)[0]
 sig_trend_data = stat_sig_points[sig_trend_var].values.flatten()
 sig_trend_data = sig_trend_data[~np.isnan(sig_trend_data)]  # Remove NaNs

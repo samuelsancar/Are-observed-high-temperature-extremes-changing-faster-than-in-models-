@@ -18,14 +18,15 @@ import iris.plot as iplt
 import iris.quickplot as qplt
 from Trend_calc_function import calculate_trend
 
-# Define data file paths
-datadir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/EC-Earth3P/'
-outdir = '/data/users/samuel.sancar/Heat_extremes/trends/Coupled_model_trends/'
-
 #Set model, experiment, ensemble member:
-model = sys.argv[1]
-experiment = sys.argv[2]
-member = sys.argv[3]
+Mode = sys.argv[1]  # 'Coupled' or 'SST'
+model = sys.argv[2]
+experiment = sys.argv[3]
+member = sys.argv[4]
+
+# Define data file paths
+datadir = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/'
+outdir = f'/data/users/samuel.sancar/Heat_extremes/Trends/{Mode}_model_trends/'
 
 fn = model+'_'+experiment+'_'+member+'_tailwidths.nc'
 yearly_tail_widths = iris.load_cube(datadir+fn)
@@ -54,4 +55,3 @@ for dt in time_datetimes:
 trend = calculate_trend(year_cube, yearly_tail_widths)
 
 iris.save(trend,outdir+model+'_'+experiment+'_'+member+'_tailwidth_trend.nc')
-import sys

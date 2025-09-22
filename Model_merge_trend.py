@@ -11,7 +11,6 @@ import iris
 import numpy as np
 import sys
 import iris.analysis.stats
-import matplotlib.pyplot as plt
 import iris.plot as iplt
 import iris.quickplot as qplt
 import os
@@ -20,7 +19,7 @@ from Trend_calc_function import calculate_trend
 
 # Define data file paths
 datadir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/'
-outdir = '/data/users/samuel.sancar/Heat_extremes/trends/SST_model_trends/'
+outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/'
 
 # Set data variables
 Group = sys.argv[1]
@@ -32,12 +31,17 @@ t2 = 2023
 
 os.makedirs(outdir, exist_ok=True)
 
-#Define timeline
+# Define timeline
 years = np.arange(t1, t2)
 time_unit = cf_units.Unit('days since 1970-01-01', calendar='gregorian')
 
 # Create a time coordinate
-time_coord = iris.coords.DimCoord(years, standard_name='time',long_name='valid_time',units=time_unit,)
+time_coord = iris.coords.DimCoord(
+    years,
+    standard_name='time',
+    long_name='valid_time',
+    units=time_unit,
+)
 
 # Create list of year cubes
 yearly_tail_widths = iris.cube.CubeList([])
@@ -61,14 +65,21 @@ iris.util.equalise_attributes(yearly_tail_widths)
 data_stack = np.stack([cube.data for cube in yearly_tail_widths], axis=0)
 
 # Create the 3D cube
-yearly_tail_widths = iris.cube.Cube(data_stack,dim_coords_and_dims=[(time_coord, 0), (lat_coord, 1), (lon_coord, 2)],long_name='tail_width_over_years',units=yearly_tail_widths[0].units,attributes=yearly_tail_widths[0].attributes)
+yearly_tail_widths = iris.cube.Cube(
+    data_stack,
+    dim_coords_and_dims=[(time_coord, 0), (lat_coord, 1), (lon_coord, 2)],
+    long_name='tail_width_over_years',
+    units=yearly_tail_widths[0].units,
+    attributes=yearly_tail_widths[0].attributes
+)
+
 yearly = yearly_tail_widths.copy()
 year_cube_data = np.empty(shape=yearly.data.shape)
 
 # Define each year
-for i,y in enumerate(np.arange(t1,t2)):
+for i,y in enumerate(np.arange(t1, t2)):
     #print(y)
-    year_cube_data[i,:,:] = y
+    year_cube_data[i, :, :] = y
 
 yearly.data = year_cube_data
 

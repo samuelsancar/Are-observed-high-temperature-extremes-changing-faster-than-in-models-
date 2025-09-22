@@ -70,7 +70,7 @@ plt.axvline(x=60, color='red', linestyle='--', label='Value 60')
 plt.legend()
 
 plt.xlabel('Number of Significant Grid Points')
-plt.ylabel('Number of Models')
+plt.ylabel('Number of Ensemble Members')
 plt.label()
 plt.title(f'Histogram of Significant Grid Points in Tail Width Trends ({t1}–{t2})')
 plt.grid(True)

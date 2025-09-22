@@ -92,18 +92,21 @@ stipple_lons = lon2d[difference_mask]
 # Plot stippling map
 fig = plt.figure(figsize=(14, 7))
 ax = plt.axes(projection=ccrs.PlateCarree())
+ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
+
 ax.set_global()
-ax.scatter(stipple_lons, stipple_lats, color='crimson', s=1, alpha=0.6,
-           transform=ccrs.PlateCarree(), label='Stippling')
+ax.scatter(stipple_lons, stipple_lats, color='crimson', s=1, alpha=0.6,transform=ccrs.PlateCarree(), label='Stippling')
 ax.coastlines(resolution='50m', linewidth=1)
 ax.add_feature(cfeature.LAND, facecolor='lightgray')
 ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
 ax.add_feature(cfeature.BORDERS, linestyle=':', linewidth=0.5)
+
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.top_labels = False
 gl.right_labels = False
 gl.xlabel_style = {'size': 10}
 gl.ylabel_style = {'size': 10}
+
 plt.title(f"Rejected Statistically Significant Grid Points\n{reanalysis.upper()} {variable.replace('_', ' ')} ({t1}–{t2})",
           fontsize=16, weight='bold')
 plt.tight_layout()

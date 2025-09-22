@@ -18,12 +18,12 @@ import scipy.stats as stats
 import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
 
-def load_and_mask_yearly_data(datadir, reanalysis, variable, years, lat_threshold=-60):
+def load_and_mask_yearly_data(datadir, reanalysis, variable, years, lat_min=-60, lat_max=90):
     cubes = iris.cube.CubeList()
     for year in years:
         filename = f"{reanalysis}_{variable}_{year}_tail_width.nc"
         cube = iris.load_cube(os.path.join(datadir, filename))
-        masked_cube, _ = lat_land_mask(cube, lat_threshold)
+        masked_cube, _ = lat_land_mask(cube, lat_min, lat_max)
         cubes.append(masked_cube)
     return cubes
 
@@ -83,6 +83,7 @@ To run: if __name__ == "__main__":
             main()
 
 """
+
 def main():
     datadir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/era5/'
     outdir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends'

@@ -7,6 +7,7 @@ To run: python plot_tailwidth_trend.py [1958] [2023] [fdr|p]
 
 import iris
 import sys
+import os
 import matplotlib.pyplot as plt
 import iris.plot as iplt
 import cartopy.crs as ccrs
@@ -27,19 +28,19 @@ sig = sys.argv[3]
 variable = 'daily_maximum_2m_temperature'
 
 # Load trend data
-datadir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends/'
+datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
 template = iris.load_cube('template_cube_1deg.nc')
 
 # Apply latitude and land mask using function
-model_mask, _ = lat_land_mask(trend, -60)
+model_mask, _ = lat_land_mask(trend, -60, 90)
 
 # Extract grid point locations for stippling
 lon = template.coord('longitude').points
 lat = template.coord('latitude').points
 lon2d, lat2d = np.meshgrid(lon, lat)
 
-# Load significance mask
+# Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
     statsig = xr.DataArray(
         data=np.load(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_{t1}-{t2}.npy"),
@@ -52,12 +53,12 @@ else:
     statsig_ds = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_p_{t1}-{t2}.nc")
     statsig = list(statsig_ds.data_vars.values())[0]
     sig_mask_np = statsig.values < 0.05
-    sig_mask_bool = (lsm_interp > 0.5) & sig_mask_np
-    stipple_lats, stipple_lons = lat2d[sig_mask_bool], lon2d[sig_mask_bool]
+    stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
 # Create figure and axis
 fig = plt.figure(figsize=(12, 6))
 ax = plt.axes(projection=ccrs.PlateCarree())
+ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
 
 # Plot using Iris
 iplt.pcolormesh(model_mask, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
@@ -88,6 +89,7 @@ plt.title(f"Trend in Tail Width\n{reanalysis} {variable.replace('_', ' ')} ({t1}
 
 # Layout
 plt.tight_layout()
+plt.savefig("/home/users/samuel.sancar/Documents/Heat_Extremes/CSSP_Images/ERA5_fdr_corrected.png", dpi = 500)
 plt.show()
 
 

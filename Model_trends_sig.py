@@ -11,8 +11,7 @@ import numpy as np
 import os
 import xarray as xr
 import scipy.stats as stats
-from Lat_Land_mask_function import lat_land_mask
-import sys
+from Lat_Land_mask_function import ThreeD_lat_land_mask
 
 # Define the analysis period
 years = np.arange(1958, 2023)
@@ -20,10 +19,15 @@ years = np.arange(1958, 2023)
 # Load the template cube for regridding
 template_cube = iris.load_cube('template_cube_1deg.nc')
 
-# Define output directory
+# Define input and output directories
+coupled_dir = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/*.nc'
 outdir = '/data/users/samuel.sancar/Heat_extremes/trends/Trend_significance/'
 os.makedirs(outdir, exist_ok=True)
 print(f"Output directory is set to: {outdir}")
+
+# Get filenames
+coupled_filenames = sorted(glob.glob(coupled_dir, recursive=True))
+print(f"Found {len(coupled_filenames)} files to process.")
 
 def compute_kendall_tau(years, data_cube):
     if data_cube.ndim != 3:
@@ -52,53 +56,49 @@ def save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, filename)
     tau_da = xr.DataArray(tau_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
     p_da = xr.DataArray(p_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
     base_name = os.path.splitext(os.path.basename(filename))[0]
-    tau_path = os.path.join(outdir, f"{base_name}_tailwidth_mktau_1958-2022.nc")
-    p_path = os.path.join(outdir, f"{base_name}_tailwidth_p_1958.nc")
+    tau_path = os.path.join(outdir, f"{base_name}_mktau_1958-2022.nc")
+    p_path = os.path.join(outdir, f"{base_name}_p_1958.nc")
     tau_da.to_netcdf(tau_path)
     p_da.to_netcdf(p_path)
     print(f"Saved: {tau_path}")
     print(f"Saved: {p_path}")
 
-def process_single_model_file(filename):
-    print(f"\nProcessing file: {filename}")
+def load_valid_cube(filepath):
     try:
-        cube = iris.load_cube(filename)
+        cubes = iris.load(filepath)
+        for cube in cubes:
+            if cube.ndim == 3 and cube.shape[0] == len(years):
+                return cube
+        raise ValueError("No valid 3D cube with expected time dimension found.")
     except Exception as e:
-        print(f"Failed to load cube from {filename}: {e}")
-        return
+        raise RuntimeError(f"Failed to load cube from {filepath}: {e}")
 
-    if cube.ndim != 3:
-        print(f"Skipping {filename}: not a 3D cube")
-        return
+def process_model_files(filenames):
+    processed = 0
+    for f in filenames:
+        print(f"\nProcessing file: {f}")
+        try:
+            cube = load_valid_cube(f)
+        except Exception as e:
+            print(e)
+            continue
 
-    try:
+        try:
+            cube_regridded = cube.regrid(template_cube, iris.analysis.Linear())
+            masked_cube, _ = ThreeD_lat_land_mask(cube_regridded, -60, 90)
+            tau_matrix, p_matrix, lat_points, lon_points = compute_kendall_tau(years, masked_cube)
+            save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, f)
+            processed += 1
+        except Exception as e:
+            print(f"Error during processing of {f}: {e}")
+            continue
 
-        # Regrid
-        cube_regridded = cube.regrid(template_cube, iris.analysis.Linear())
+    print(f"Finished processing. Total files successfully processed: {processed}/{len(filenames)}")
 
-        # Fix coordinate dimension assignments if needed
-        if cube_regridded.coord_dims('latitude') != (1,):
-            cube_regridded.remove_coord('latitude')
-            cube_regridded.add_dim_coord(template_cube.coord('latitude'), 1)
+# Run the processing
+process_model_files(coupled_filenames)
 
-        if cube_regridded.coord_dims('longitude') != (2,):
-            cube_regridded.remove_coord('longitude')
-            cube_regridded.add_dim_coord(template_cube.coord('longitude'), 2)
 
-        masked_cube, _ = lat_land_mask(cube_regridded, -60)
-        tau_matrix, p_matrix, lat_points, lon_points = compute_kendall_tau(years, masked_cube)
-        save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, filename)
-        print("Finished processing the file successfully.")
-    except Exception as e:
-        print(f"Error during processing of {filename}: {e}")
-
-# Entry point for script execution
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python Model_sig_trends.py <model_file_path>")
-    else:
-        model_file = f"/data/users/samuel.sancar/Heat_extremes/Tail_widths/{sys.argv[1]}"
-        process_single_model_file(model_file)
 
 
 

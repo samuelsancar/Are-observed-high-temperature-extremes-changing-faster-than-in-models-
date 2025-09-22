@@ -1,0 +1,192 @@
+2025-09-22 13:43:28,609 - ERROR - Error assigning time coordinate for year 1966: cannot schedule new futures after shutdown
+2025-09-22 13:43:28,672 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:43,055 - ERROR - Error assigning time coordinate for year 1968: cannot schedule new futures after shutdown
+2025-09-22 13:43:43,059 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:47,796 - ERROR - Error assigning time coordinate for year 1967: cannot schedule new futures after shutdown
+2025-09-22 13:43:47,801 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:50,941 - ERROR - Error assigning time coordinate for year 1969: cannot schedule new futures after shutdown
+2025-09-22 13:43:50,947 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:56,098 - ERROR - Error assigning time coordinate for year 1970: cannot schedule new futures after shutdown
+2025-09-22 13:43:56,101 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:56,214 - ERROR - Error assigning time coordinate for year 1971: cannot schedule new futures after shutdown
+2025-09-22 13:43:56,217 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:57,832 - ERROR - Error assigning time coordinate for year 1972: cannot schedule new futures after shutdown
+2025-09-22 13:43:57,835 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+
+2025-09-22 13:43:58,012 - ERROR - Error assigning time coordinate for year 1973: cannot schedule new futures after shutdown
+2025-09-22 13:43:58,014 - ERROR - Traceback (most recent call last):
+  File "/home/users/samuel.sancar/Documents/Heat_Extremes/Code/Model_tailwidths.py", line 96, in assign_year_time
+    cube.data[np.newaxis, ...],
+    ^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/cube.py", line 2853, in data
+    return self._data_manager.data
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_data_manager.py", line 211, in data
+    result = as_concrete_data(self._lazy_array)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 405, in as_concrete_data
+    (data,) = _co_realise_lazy_arrays([data])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/iris/_lazy_data.py", line 363, in _co_realise_lazy_arrays
+    computed_arrays = da.compute(*arrays)
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/site-packages/dask/base.py", line 681, in compute
+    results = schedule(expr, keys, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/apps/sss/environments/default-2025_05_27/lib/python3.12/concurrent/futures/thread.py", line 171, in submit
+    raise RuntimeError('cannot schedule new futures after shutdown')
+RuntimeError: cannot schedule new futures after shutdown
+

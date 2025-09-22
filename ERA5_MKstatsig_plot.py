@@ -62,6 +62,9 @@ def main():
 
     p_values = load_p_values(datadir, reanalysis, variable, t1, t2)
     sig_mask_np = create_stippling_mask(p_values)
+    no_of_gridpoints = np.count_nonzero(sig_mask_np)
+    print("Number of significant grid points (p < 0.05) for")
+    print(no_of_gridpoints)
 
     np.save(os.path.join(out_path, f"{reanalysis}_{variable}_tailwidth_p_mask_{t1}-{t2}.npy"), sig_mask_np)
 

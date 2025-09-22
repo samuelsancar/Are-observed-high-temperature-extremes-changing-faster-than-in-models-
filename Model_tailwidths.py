@@ -1,7 +1,7 @@
 """
 17/07/25
 ---------
-Code to concatenate mixed SST 'daily tasmax tailwidth' into yearly files and calculate tailwidths for years 1958-2023.
+Code to concatenate SST 'daily tasmax tailwidth' into yearly files and calculate tailwidths for years 1958-2023.
 
 To run: python SST_tailwidths.py [model] [experiment] [member]
 
@@ -128,10 +128,12 @@ def run_process_year(args):
     return process_year(*args)
 
 def main():
-    Group = sys.argv[1] 
-    model = sys.argv[1] 
-    experiment, member = sys.argv[3:5]
-    datadir = f'/data/users/samuel.sancar/Climate_models/SST/{Group}/'
+    Mode = sys.argv[1]  # 'Coupled' or 'SST'
+    Group = sys.argv[2] # See directory names
+    model = sys.argv[3]
+    experiment = sys.argv[4]
+    member = sys.argv[5]
+    datadir = f'/data/users/samuel.sancar/Climate_models/{Mode}/{Group}/'
     outdir = f'/data/users/samuel.sancar/Heat_extremes/tailwidthslist/{Group}/'
     os.makedirs(outdir, exist_ok=True)
 
