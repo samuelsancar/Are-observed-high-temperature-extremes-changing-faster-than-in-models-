@@ -51,8 +51,6 @@ if sig == 'fdr':
 else:
     statsig_ds = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_p_{t1}-{t2}.nc")
     statsig = list(statsig_ds.data_vars.values())[0]
-    lsm = iris.load_cube('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')
-    lsm_interp = lsm.regrid(template, iris.analysis.Nearest()).data
     sig_mask_np = statsig.values < 0.05
     sig_mask_bool = (lsm_interp > 0.5) & sig_mask_np
     stipple_lats, stipple_lons = lat2d[sig_mask_bool], lon2d[sig_mask_bool]

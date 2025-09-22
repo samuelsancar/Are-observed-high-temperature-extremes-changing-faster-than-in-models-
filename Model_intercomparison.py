@@ -12,12 +12,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 from Lat_Land_mask_function import lat_land_mask
+import matplotlib.cm as mpl_cm
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
 
 # Load regridding template
 template = iris.load_cube('template_cube_1deg.nc')
 
 # Load ERA5 agreement plot
-ERA5 = np.load('/home/users/samuel.sancar/Heat_Extremes/Model_agreement/ERA5_agreement.npy')
+ERA5 = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_agreement.npy')
 
 # Load ERA5 trends
 datadir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends/'
