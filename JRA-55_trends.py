@@ -6,6 +6,7 @@
     To run: python3 JRA-55_trends.py
 
 """
+
 import os
 import sys
 import numpy as np

@@ -22,8 +22,8 @@ def save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, reanalysi
     p_da.to_netcdf(os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_p_{t1}-{t2}.nc"))
 
 def main():
-    datadir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/era5/'
-    outdir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends'
+    datadir = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'
+    outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends'
     reanalysis = 'era5'
     variable = 'daily_maximum_2m_temperature'
     t1 = int(sys.argv[1])

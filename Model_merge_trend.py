@@ -10,16 +10,17 @@ To run: python SST_merge&trend.py
 import iris
 import numpy as np
 import sys
-import iris.analysis.stats
-import iris.plot as iplt
+from iris.cube import CubeList
+from iris.analysis import stats
 import iris.quickplot as qplt
 import os
 import cf_units
-from Trend_calc_function import calculate_trend
+from Trend_calculation_function import calculate_trend
 
 # Define data file paths
-datadir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/'
-outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/'
+datadir = '/data/users/samuel.sancar/Heat_extremes/Tailwidthslist/'
+outtrend = '/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/'
+outtailwidth = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/'
 
 # Set data variables
 Group = sys.argv[1]
@@ -29,7 +30,7 @@ member = sys.argv[4]
 t1 = 1958
 t2 = 2023
 
-os.makedirs(outdir, exist_ok=True)
+os.makedirs(outtrend, exist_ok=True)
 
 # Define timeline
 years = np.arange(t1, t2)
@@ -83,8 +84,11 @@ for i,y in enumerate(np.arange(t1, t2)):
 
 yearly.data = year_cube_data
 
+out_file_tailwidth = os.path.join(outtailwidth, f"{model}_{experiment}_{member}_tailwidths.nc")
+iris.save(yearly_tail_widths, out_file_tailwidth)
+
 # Calculate trend using function
 trend = calculate_trend(yearly, yearly_tail_widths)
 
-out_file_trend = os.path.join(outdir, f"{model}_{experiment}_{member}_tailwidth_trend.nc")
-iris.save(trend,out_file_trend)
+out_file_trend = os.path.join(outtrend, f"{model}_{experiment}_{member}_tailwidth_trend.nc")
+iris.save(trend, out_file_trend)

@@ -69,35 +69,48 @@ jra_sig_gridpoints = jra_cube.data < 0.05
 sum_jra_sig_gridpoints = np.count_nonzero(jra_sig_gridpoints)
 significant_gridpoints.append(sum_jra_sig_gridpoints)
 
-# Create the histogram
 plt.figure(figsize=(12, 7))
-counts, bins, patches = plt.hist(significant_gridpoints,bins=200,range=(0, 12000),histtype='bar',color='blue',alpha=0.85,edgecolor='black')
+counts, bins, patches = plt.hist(
+    significant_gridpoints,
+    bins=15,
+    range=(0, 3000),
+    histtype='bar',
+    color='#4682B4',  # Steel blue
+    alpha=0.85,
+    edgecolor='white',
+    linewidth=2
+)
 
-# Annotate the histogram at ERA5 value
-plt.axvline(x=sum_era5_sig_gridpoints,color='red',linestyle='--',linewidth=2,label='ERA5 Value')
-plt.text(sum_era5_sig_gridpoints + 50,max(counts) * 0.9,'ERA5',color='red',fontsize=12)
+# Label histogram at ERA5 value
+plt.axvline(x=sum_era5_sig_gridpoints, color='#D7263D', linestyle='--', linewidth=2.5, label='ERA5 Value')
+plt.text(
+    sum_era5_sig_gridpoints + 50, max(counts) * 0.92, 'ERA5',
+    color='#D7263D', fontsize=13, fontweight='bold',
+    bbox=dict(facecolor='white', edgecolor='#D7263D', boxstyle='round,pad=0.3', alpha=0.8)
+)
 
-# Annotate the histogram at JRA-55 value
-plt.axvline(x=sum_jra_sig_gridpoints,color='red',linestyle='--',linewidth=2,label='JRA-5 Value')
-plt.text(sum_jra_sig_gridpoints + 50,max(counts) * 0.9,'JRA-55',color='red',fontsize=12)
+# Label histogram at JRA-55 value
+plt.axvline(x=sum_jra_sig_gridpoints, color='#1B998B', linestyle='--', linewidth=2.5, label='JRA-55 Value')
+plt.text(
+    sum_jra_sig_gridpoints + 50, max(counts) * 0.82, 'JRA-55',
+    color='#1B998B', fontsize=13, fontweight='bold',
+    bbox=dict(facecolor='white', edgecolor='#1B998B', boxstyle='round,pad=0.3', alpha=0.8)
+)
 
-# Add labels and title with improved font styling
-plt.xlabel('Number of Significant Grid Points', fontsize=14, fontweight='bold')
-plt.ylabel('Number of Models', fontsize=14, fontweight='bold')
-plt.title('Histogram of Significant Grid Points in Tail Width Trends (1958–2022)', fontsize=16, fontweight='bold')
+# title
+plt.xlabel('Number of Significant Grid Points', fontsize=15, fontweight='bold')
+plt.ylabel('Number of Models', fontsize=15, fontweight='bold')
+plt.title('Histogram of Significant Grid Points in Tail Width Trends (1958–2022)', fontsize=18, fontweight='bold')
 
-# Customize ticks and grid
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.grid(True, linestyle='--', alpha=0.6)
+# Ticks and grid
+plt.xticks(fontsize=13)
+plt.yticks(fontsize=13)
+plt.grid(True, linestyle='--', alpha=0.5, linewidth=1.2)
 
-# Add legend with better styling
-plt.legend(fontsize=12, loc='upper right')
-
-# Improve layout
+# Legend
+plt.legend(fontsize=13, loc='upper right', frameon=False)
 plt.tight_layout()
-
-# Show the plot
 plt.show()
+
 
 

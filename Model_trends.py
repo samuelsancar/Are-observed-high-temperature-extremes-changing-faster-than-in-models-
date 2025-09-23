@@ -16,7 +16,7 @@ import iris.analysis.stats
 import matplotlib.pyplot as plt
 import iris.plot as iplt
 import iris.quickplot as qplt
-from Trend_calc_function import calculate_trend
+from Trend_calculation_function import calculate_trend
 
 #Set model, experiment, ensemble member:
 Mode = sys.argv[1]  # 'Coupled' or 'SST'

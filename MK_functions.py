@@ -18,7 +18,7 @@ import scipy.stats as stats
 import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
 
-def load_and_mask_yearly_data(datadir, reanalysis, variable, years, lat_min=-60, lat_max=90):
+def load_and_mask_yearly_data(datadir, reanalysis, variable, years, lat_min=-60, lat_max=60):
     cubes = iris.cube.CubeList()
     for year in years:
         filename = f"{reanalysis}_{variable}_{year}_tail_width.nc"

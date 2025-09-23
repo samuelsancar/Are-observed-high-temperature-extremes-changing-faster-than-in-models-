@@ -20,14 +20,14 @@ years = np.arange(1958, 2023)
 template_cube = iris.load_cube('template_cube_1deg.nc')
 
 # Define input and output directories
-coupled_dir = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/*.nc'
-outdir = '/data/users/samuel.sancar/Heat_extremes/trends/Trend_significance/'
+Model_dir = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/*.nc'
+outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/'
 os.makedirs(outdir, exist_ok=True)
 print(f"Output directory is set to: {outdir}")
 
 # Get filenames
-coupled_filenames = sorted(glob.glob(coupled_dir, recursive=True))
-print(f"Found {len(coupled_filenames)} files to process.")
+Model_filenames = sorted(glob.glob(Model_dir, recursive=True))
+print(f"Found {len(Model_filenames)} files to process.")
 
 def compute_kendall_tau(years, data_cube):
     if data_cube.ndim != 3:
@@ -85,7 +85,7 @@ def process_model_files(filenames):
 
         try:
             cube_regridded = cube.regrid(template_cube, iris.analysis.Linear())
-            masked_cube, _ = ThreeD_lat_land_mask(cube_regridded, -60, 90)
+            masked_cube, _ = ThreeD_lat_land_mask(cube_regridded, -60, 60)
             tau_matrix, p_matrix, lat_points, lon_points = compute_kendall_tau(years, masked_cube)
             save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, f)
             processed += 1
@@ -96,7 +96,7 @@ def process_model_files(filenames):
     print(f"Finished processing. Total files successfully processed: {processed}/{len(filenames)}")
 
 # Run the processing
-process_model_files(coupled_filenames)
+process_model_files(Model_filenames)
 
 
 

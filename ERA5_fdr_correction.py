@@ -34,7 +34,7 @@ Stat_sig = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_p_{t1}-{
 pvals = Stat_sig["__xarray_dataarray_variable__"].values
 
 # Apply lat_land_mask before FDR correction
-masked_cube, no_of_gridpoints = lat_land_mask(pvals, -60. 90)
+masked_cube, no_of_gridpoints = lat_land_mask(pvals, -60, 60)
 masked_data = masked_cube.data
 
 # Flatten valid values and apply FDR correction

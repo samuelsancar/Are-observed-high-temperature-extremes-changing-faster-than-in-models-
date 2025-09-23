@@ -1,162 +1,93 @@
 """
+17/09/2025
+----------
 
-Code to download, find daily maximum 2m temperature data from JRA-55 and find annual tail-width.
+Code to download JRA-55 data, aggregate for daily maximum 2m temperature data, and find annual tail-width.
 
 To run: python JRA55_tasmax.py
 
 """
 
 import iris
-import numpy as np
-import sys
-import os
-import glob
+import iris.coord_systems as cs
 import iris.analysis
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from iris.cube import CubeList
-import cf_units
-import datetime
-import iris.coords
-import traceback
-import logging
+import iris.coord_categorisation
+import numpy as np
+import os
 
-# Setup logging
-logging.basicConfig(filename='tailwidths_processing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Define directories and parameters
+datadir = '/data/users/samuel.sancar/Climate_models/JRA-55/'
+outdir = '/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/daily_maximum__2m_temperature/'
+template = iris.load_cube('template_cube_1deg.nc')
+reanalysis = 'jra55'
+variable = 'minmax_surf.015_tmax.reg_tl319.'
 
-def load_template(template_path):
-    try:
-        return iris.load_cube(template_path)
-    except Exception as e:
-        logging.error(f"Failed to load template cube from {template_path}: {e}")
-        logging.error(traceback.format_exc())
-        return None
+# Ensure output directory exists
+os.makedirs(outdir, exist_ok=True)
 
-def file_covers_year(file_path, year):
-    try:
-        date_str = file_path.split('_')[-1].replace('.nc', '')
-        start_str, end_str = date_str.split('-')
-        start_date = datetime.datetime.strptime(start_str, '%Y%m%d')
-        end_date = datetime.datetime.strptime(end_str, '%Y%m%d')
-        return start_date.year <= year <= end_date.year
-    except Exception as e:
-        logging.warning(f"Failed to parse date from {file_path}: {e}")
-        return False
+# Function to match coordinate systems and regrid
+def match_and_regrid(merged_cube, template):
+    def assign_default_coord_system(cube):
+        default_cs = cs.GeogCS(6371229.0)
+        for coord_name in ['latitude', 'longitude']:
+            coord = cube.coord(coord_name)
+            if coord.coord_system is None:
+                coord.coord_system = default_cs
 
-def get_yearly_cube(y, model, experiment, member, datadir, future_expt, template):
-    expt = experiment if y < 2015 else future_expt
-    subdir = f'tasmax_day_{model}_{expt}_{member}'
-    search_dir = os.path.join(datadir, subdir)
-    all_files = glob.glob(os.path.join(search_dir, '*.nc'))
-    matching_file = next((f for f in all_files if file_covers_year(f, y)), None)
+    assign_default_coord_system(merged_cube)
+    assign_default_coord_system(template)
 
-    if not matching_file:
-        logging.warning(f"No file found for year {y}, skipping.")
-        return None
+    for coord_name in ['latitude', 'longitude']:
+        merged_coord = merged_cube.coord(coord_name)
+        template_coord = template.coord(coord_name)
+        if merged_coord.units != template_coord.units:
+            merged_coord.units = template_coord.units
 
-    try:
-        cube_list = iris.load(matching_file)
-        iris.util.equalise_attributes(cube_list)
-        iris.util.unify_time_units(cube_list)
-        cube = cube_list.concatenate_cube()
-        constraint = iris.Constraint(time=lambda cell: cell.point.year == y)
-        yearly_cube = cube.extract(constraint)
+    return merged_cube.regrid(template, iris.analysis.Linear())
 
-        if yearly_cube is None or yearly_cube.shape[0] == 0:
-            logging.warning(f"No data for year {y} after extraction.")
-            return None
+# Process each year
+for y in range(1958, 2023):
 
-        return yearly_cube.regrid(template, iris.analysis.Linear())
-    except Exception as e:
-        logging.error(f"Failed to load or process cube for year {y}: {e}")
-        logging.error(traceback.format_exc())
-        return None
+    # Load monthly data files for the year
+    file_pattern = f"{datadir}{variable}{y}*"
+    cube_list = iris.load(file_pattern)
 
-def assign_year_time(cube, year):
-    try:
-        time_unit = cf_units.Unit('days since 1950-01-01', calendar='gregorian')
-        time_point = time_unit.date2num(datetime.datetime(year, 7, 1))
-        time_coord = iris.coords.DimCoord([time_point], standard_name='time', units=time_unit)
-        lat = cube.coord('latitude')
-        lon = cube.coord('longitude')
+    iris.util.equalise_attributes(cube_list)
+    iris.util.unify_time_units(cube_list)
 
-        return iris.cube.Cube(
-            cube.data[np.newaxis, ...],
-            standard_name=cube.standard_name,
-            long_name=cube.long_name,
-            var_name=cube.var_name,
-            units=cube.units,
-            attributes=cube.attributes,
-            dim_coords_and_dims=[(time_coord, 0), (lat, 1), (lon, 2)],
-            aux_coords_and_dims=[],
-        )
-    except Exception as e:
-        logging.error(f"Error assigning time coordinate for year {year}: {e}")
-        logging.error(traceback.format_exc())
-        return None
+    merged_cube = cube_list.concatenate_cube()
+    regridded_cube = match_and_regrid(merged_cube, template)
 
-def process_year(args):
-    y, model, experiment, member, datadir, future_expt, template = args
-    cube = get_yearly_cube(y, model, experiment, member, datadir, future_expt, template)
-    if cube is None:
-        return None, y
-    try:
-        p99 = cube.collapsed('time', iris.analysis.PERCENTILE, percent=99)
-        p87p5 = cube.collapsed('time', iris.analysis.PERCENTILE, percent=87.5)
-        tail_width = p99 - p87p5
-        return assign_year_time(tail_width, y), y
-    except Exception as e:
-        logging.error(f"Error calculating tail width for year {y}: {e}")
-        logging.error(traceback.format_exc())
-        return None, y
+    # Reshape to daily blocks (8 time steps per day)
+    no_of_days = regridded_cube.coord('time').shape[0] // 8
+    regridded_cube = regridded_cube[:no_of_days * 8]
 
-def main():
-    Mode, Group, model, experiment, member = sys.argv[1:6]
-    datadir = f'/data/users/samuel.sancar/Climate_models/{Mode}/{Group}/'
-    outdir = f'/data/users/samuel.sancar/Heat_extremes/tailwidthslist/{Group}/'
-    os.makedirs(outdir, exist_ok=True)
+    # Add 'day' categorisation for aggregation
+    iris.coord_categorisation.add_day_of_year(regridded_cube, 'time', name='day')
 
-    template = load_template('template_cube_1deg.nc')
-    if template is None:
-        raise RuntimeError("Template cube could not be loaded.")
+    # Aggregate to daily maximum
+    daily_cube = regridded_cube.aggregated_by('day', iris.analysis.MAX)
 
-    future_expt = {
-        'hist-1950': 'highres-future',
-        'highresSST-present': 'highresSST-future'
-    }.get(experiment)
+    # Create a new time coordinate based on the aggregated cube's shape
+    time_points = daily_cube.coord('day').points
+    time_units = regridded_cube.coord('time').units
 
-    if future_expt is None:
-        raise ValueError(f"Unknown experiment: {experiment}")
+    # Ensure time_points are strictly monotonic
+    unique_sorted_time_points = sorted(set(time_points))
+    new_time_coord = iris.coords.DimCoord(unique_sorted_time_points, standard_name='time', units=time_units)
 
-    years = list(range(1958, 2023))
-    args_list = [(y, model, experiment, member, datadir, future_expt, template) for y in years]
+    # Replace time coordinate in daily_cube
+    daily_cube.remove_coord('time')
+    daily_cube.add_dim_coord(new_time_coord, 0)
 
-    tail_width_list = []
-    with ThreadPoolExecutor() as executor:
-        future_to_year = {executor.submit(process_year, args): args[0] for args in args_list}
-        for future in as_completed(future_to_year):
-            result, year = future.result()
-            if result is not None:
-                output_path = f'{outdir}{model}_{experiment}_{member}_tailwidth_{year}.nc'
-                iris.save(result, output_path)
-                tail_width_list.append((year, result))
-                print(f"[✓] Saved tail width for year {year} to {output_path}")
-            else:
-                print(f"[!] Skipped saving for year {year} due to missing data.")
+    # Remove problematic attributes before saving
+    daily_cube.attributes.pop('GRIB_PARAM', None)
 
-    if not tail_width_list:
-        print("[!] No tail width cubes were produced.")
-        sys.exit(1)
+    # Save the daily maximum temperature cube to a NetCDF file
+    output_filename = f"{outdir}{reanalysis}_{variable}_{y}_tailwidth.nc"
+    iris.save(daily_cube, output_filename)
 
-    sorted_cubes = [cube for year, cube in sorted(tail_width_list, key=lambda x: x[0])]
-    iris.util.equalise_attributes(sorted_cubes)
-    merged_cube = CubeList(sorted_cubes).merge_cube()
-    iris.save(merged_cube, f'{outdir}{model}_{experiment}_{member}_tailwidths.nc')
-    print(f"[✓] Saved tail width cube with shape {merged_cube.shape}")
-
-if __name__ == "__main__":
-    main()
-
-
+print("Processing complete.")
 
 
 

@@ -134,7 +134,7 @@ def main():
     experiment = sys.argv[4]
     member = sys.argv[5]
     datadir = f'/data/users/samuel.sancar/Climate_models/{Mode}/{Group}/'
-    outdir = f'/data/users/samuel.sancar/Heat_extremes/tailwidthslist/{Group}/'
+    outdir = f'/data/users/samuel.sancar/Heat_extremes/Tailwidthslist/{Group}/'
     os.makedirs(outdir, exist_ok=True)
 
     template_path = 'template_cube_1deg.nc'
