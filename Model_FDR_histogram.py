@@ -26,10 +26,10 @@ template_cube = iris.load_cube('template_cube_1deg.nc')
 
 # Load and regrid ERA5 trend data
 datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
-era5_cube = np.load(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_1958-2023.npy")
+era5_cube = np.load(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_positive_1958-2023.npy")
 
 datadir_jra = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
-jra_cube = np.load(f"{datadir_jra}jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_fdr_1958-2023.npy")
+jra_cube = np.load(f"{datadir_jra}jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_fdr_positive_1958-2023.npy")
 
 # Prepare data fro ERA5
 era5_masked_cube = era5_cube
@@ -40,8 +40,8 @@ jra_masked_cube = jra_cube
 jra_data = jra_masked_cube[~np.isnan(jra_masked_cube)]
 
 # Load and regrid model cubes
-coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections/*_hist-1950_*_fdr_1958-2023.npy'))
-sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections/*_highresSST-present_*_fdr_1958-2023.npy'))
+coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections_PositiveOnly/*_hist-1950_*_fdr_significant_positive.npy'))
+sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections_PositiveOnly/*_highresSST-present_*_fdr_significant_positive.npy'))
 
 coupled_data = [np.load(f) for f in coupled_filenames]
 sst_data = [np.load(f) for f in sst_filenames]
@@ -65,16 +65,21 @@ for filename in sst_filenames:
     significant_gridpoints.append(sum_sig_gridpoints)
 
 
-#era5_sig_gridpoints = era5_data.data < 0.05
+# Count FDR significant grid points for ERA5 and JRA-55
 sum_era5_sig_gridpoints = np.count_nonzero(era5_data)
-significant_gridpoints.append(sum_era5_sig_gridpoints)
-
-#jra_sig_gridpoints = jra_cube.data < 0.05
 sum_jra_sig_gridpoints = np.count_nonzero(jra_data)
-significant_gridpoints.append(sum_jra_sig_gridpoints)
+
+# Calculate JRA-55 and ERA5 percentile within model spread.
+significant_gridpoints_array = np.array(significant_gridpoints)
+era5_percentile = (np.sum(significant_gridpoints_array < sum_era5_sig_gridpoints))/ len(significant_gridpoints_array)*100
+jra_percentile =  (np.sum(significant_gridpoints_array < sum_jra_sig_gridpoints))/ len(significant_gridpoints_array)*100
+
+print(f"ERA5 significant grid points: {sum_era5_sig_gridpoints}, Percentile: {era5_percentile:.2f}%")
+print(f"JRA-55 significant grid points: {sum_jra_sig_gridpoints}, Percentile: {jra_percentile:.2f}%")
+
 
 plt.figure(figsize=(12, 7))
-counts, bins, patches = plt.hist(significant_gridpoints,bins=30,range=(0, 1200),histtype='bar',color='#4682B4',  # Steel bluealpha=0.85,edgecolor='white',
+counts, bins, patches = plt.hist(significant_gridpoints,bins=20,range=(0, 1000),histtype='bar',color='#4682B4',  # Steel bluealpha=0.85,edgecolor='white',
     linewidth=2)
 
 # Label histogram at ERA5 value

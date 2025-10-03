@@ -5,7 +5,6 @@ Code to calculate difference in daily tasmax tailwidth trends between ERA5 and m
 
 To run: python Obs-Coupled_diff.py
 
-
 """
 
 import iris

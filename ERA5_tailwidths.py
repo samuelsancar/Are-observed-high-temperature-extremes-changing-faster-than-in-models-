@@ -17,14 +17,13 @@ import iris.quickplot as qplt
 import os
 
 #Beginning & end year
-t1 = int(sys.argv[1])
-t2 = int(sys.argv[2])
+t1 = 1958
+t2 = 2023
 
-datadir = '/data/users/samuel.sancar/Heat_extremes/Merged_era5_cubes/'
+datadir = '/data/users/samuel.sancar/Heat_extremes/Merged_ERA5_cubes/'
 outdir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/'
 template = iris.load_cube('template_cube_1deg.nc')
 
-# Set data, variable
 reanalysis = 'era5'
 variable = 'daily_maximum_2m_temperature'
 
@@ -39,12 +38,15 @@ for y in np.arange(t1,t2):
     #Calculate p99-p87.5 for this year:
     p99 = year_cubes.collapsed('valid_time',iris.analysis.PERCENTILE,percent=99)
     p87p5 =year_cubes.collapsed('valid_time',iris.analysis.PERCENTILE,percent=87.5)
+
     tail_width = p99-p87p5
 
-    #regrid onto template:
+    #regrid 
     tail_width_rg = tail_width.regrid(template,iris.analysis.Linear())
+    p87p5_regrid = p87p5.regrid(template,iris.analysis.Linear())
 
     # Save each year's cube separately
     out_file = os.path.join(outdir, f"{reanalysis}_{variable}_{y}_tail_width.nc")
+    outfile_87p5 = os.path.join(outdir, f"{reanalysis}_{variable}_{y}_87p5.nc")
     iris.save(tail_width_rg, out_file)
- 
+    iris.save(p87p5_regrid, outfile_87p5)

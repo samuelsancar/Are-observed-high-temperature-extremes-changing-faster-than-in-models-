@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 def load_yearly_cubes(datadir, reanalysis, variable, years):
     cubes = iris.cube.CubeList()
     for year in years:
-        filename = f"{reanalysis}{variable}_{year}_tailwidth.nc"
+        filename = f"{reanalysis}{variable}_{year}_tail_width.nc"
         cube = iris.load_cube(os.path.join(datadir, filename))
         cubes.append(cube)
     return cubes
@@ -36,10 +36,10 @@ def main():
     outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
     os.makedirs(outdir, exist_ok=True)
 
-    reanalysis = 'jra55'
+    reanalysis = 'jra55_'
     variable = '_minmax_surf.015_tmax.reg_tl319.'
-    t1 = int(sys.argv[1])
-    t2 = int(sys.argv[2])
+    t1 = 1958
+    t2 = 2023
     years = np.arange(t1, t2)
 
     time_coord = create_time_coord(years)

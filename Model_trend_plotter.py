@@ -21,9 +21,10 @@ import numpy as np
 import xarray as xr
 sys.path.append('/home/users/samuel.sancar/Heat_Extremes/Code/Functions/')
 from Lat_Land_mask_function import lat_land_mask
+from Save_figure import save_figure
 
 # Define colour map
-cmap_rb = mpl_cm.get_cmap('RdBu_r', 15)
+cmap_rb = mpl_cm.get_cmap('coolwarm', 15)
 
 # Command-line arguments
 Mode = sys.argv[1]  # 'Coupled' or 'SST'
@@ -46,44 +47,57 @@ lat = cube.coord('latitude').points
 lon2d, lat2d = np.meshgrid(lon, lat)
 
 # Load significance mask (already masked for land and latitude)
-#if sig == 'fdr':
-#    statsig = xr.DataArray(
-#        data=np.load(f"{datadir}{model}_{experiment}_{member}_tailwidth_fdr_1958-2023.npy"),
-#        dims=["latitude", "longitude"],
-#        coords={"latitude": lat, "longitude": lon},
-#        name="significance_mask"
-#    )
-#    stipple_lats, stipple_lons = lat2d[statsig], lon2d[statsig]
-#else:
-sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/'
-statsig_ds = xr.open_dataset(f"{sig_datadir}{model}_{experiment}_{member}_tailwidths_tailwidth_p_1958.nc")
-statsig = list(statsig_ds.data_vars.values())[0]
-sig_mask_np = statsig.values < 0.05
-stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
+if sig == 'fdr':
+    sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/P-vals/'
+    statsig = xr.DataArray(
+        data=np.load(f"{sig_datadir}{model}_{experiment}_{member}_tailwidth_fdr_1958.npy"),
+        dims=["latitude", "longitude"],
+        coords={"latitude": lat, "longitude": lon},
+        name="significance_mask"
+    )
+    stipple_lats, stipple_lons = lat2d[statsig], lon2d[statsig]
+else:
+    sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/P-vals/'
+    statsig_ds = xr.open_dataset(f"{sig_datadir}{model}_{experiment}_{member}_tailwidths_p_1958.nc")
+    statsig = list(statsig_ds.data_vars.values())[0]
+    sig_mask_np = statsig.values < 0.05
+    stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
-# Plotting
+# Create figure and axis
 fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.PlateCarree())
+ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
 
 # Plot using Iris
-mesh = iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.4, vmax=0.4)
-ax.coastlines(resolution='50m', linewidth=1)
-ax.add_feature(cfeature.BORDERS, linestyle=':')
+iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
+
+# Add map features
+ax.coastlines(resolution='50m', linewidth=0.5)
+ax.add_feature(cfeature.NaturalEarthFeature(category='cultural', name='admin_0_boundary_lines_land', facecolor='none', scale='50m', edgecolor='0', lw=.05))
+ax.add_feature(cfeature.LAKES.with_scale('110m'), edgecolor='0', facecolor='none', lw=.05)
+ax.add_feature(cfeature.STATES.with_scale('110m'), edgecolor='0', facecolor='none', lw=.2)
+ax.add_feature(cfeature.RIVERS.with_scale('110m'), edgecolor='tab:blue', facecolor='none', lw=.4)
 ax.add_feature(cfeature.LAND, facecolor='lightgray')
 ax.add_feature(cfeature.OCEAN, facecolor='white')
 
 # Plot stippling
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.5, transform=ccrs.PlateCarree(), label='Stippling')
+ax.scatter(stipple_lons, stipple_lats, color='black', s=0.4, alpha=0.3, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
 
+# Add gridlines
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.top_labels = False
 gl.right_labels = False
 
-cbar = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
-cbar.set_label('Trend in Tail Width (°C per decade)', fontsize=12)
+# Add colourbar
+cbar = plt.colorbar(ax.collections[0], orientation='horizontal', pad=0.05, aspect=50)
+cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=12)
 
-plt.title(f"Trend in Tail Width\n{model} {experiment} {member}", fontsize=14, weight='bold')
+# Add title
+plt.title(f"Trend in Tailwidth for\n{model} {experiment} {member} (1958-2022)", fontsize=14, weight='bold')
+
+# Layout
 plt.tight_layout()
+save_figure(plt, f'{model}_{experiment}_{member}_tailwidths_p', 'Maps')
 plt.show()
 
 # Load full tail width data with time dimension
@@ -125,10 +139,10 @@ trend_line = trend/10 * np.arange(len(time_series)) + time_series[0]
 plt.figure(figsize=(10, 5))
 plt.plot(converted_time_points, time_series, marker='o', linestyle='-', label='Tail Width')
 
-if not np.isnan(trend):
-    plt.plot(converted_time_points, trend_line, color='red', linestyle='--', label='Trend Line')
-else:
-    print("Trend is NaN at the selected grid point")
+#if not np.isnan(trend):
+    #plt.plot(converted_time_points, trend_line, color='red', linestyle='--', label='Trend Line')
+#else:
+    #print("Trend is NaN at the selected grid point")
 
 plt.title(f"Tail Width Over Time\n{model} {experiment} {member} at Grid Point ({lat_index}, {lon_index})", fontsize=14)
 plt.xlabel("Time")

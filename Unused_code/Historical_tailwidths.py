@@ -16,7 +16,7 @@ import iris.plot as iplt
 import iris.quickplot as qplt
 from Trend_calculation_function import calculate_trend
 
-# Read command-line arguments
+# Command-line arguments
 model = sys.argv[1]
 experiment = sys.argv[2]
 member = sys.argv[3]
@@ -28,7 +28,7 @@ outdir = '/data/users/samuel.sancar/Heat_extremes/trends/'
 # Load template grid for regridding
 template = iris.load_cube('template_cube_1deg.nc')
 
-# Initialise CubeList to store tail widths
+# CubeList to store tail widths
 tail_width_list = iris.cube.CubeList([])
 
 # Load and process each year's data
@@ -67,5 +67,4 @@ year_cube.data = year_cube_data
 # Calculate Pearson correlation and trend
 trend = calculate_trend(year_cube, yearly_tail_widths)
 
-# Save trend cube
 iris.save(trend, f'{outdir}{model}_{experiment}_{member}_tailwidth_trend.nc')
