@@ -18,7 +18,7 @@ import scipy.stats as stats
 import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
 
-def load_and_mask_yearly_data(datadir, reanalysis, variable, years, lat_min=-60, lat_max=60):
+def load_and_mask_yearly_data(datadir, reanalysis, variable, years, lat_min, lat_max):
     cubes = iris.cube.CubeList()
     for year in years:
         filename = f"{reanalysis}_{variable}_{year}_tail_width.nc"
@@ -52,7 +52,7 @@ def create_year_cube(cube, years):
     year_cube.data = year_data
     return year_cube
 
-def compute_kendall_tau(year_cube, data_cube):
+def compute_kendall_tau(year_cube, data_cube):  # Use for reanalysis data
     lat_points = year_cube.coord('latitude').points
     lon_points = year_cube.coord('longitude').points
     tau_matrix = np.empty((len(lat_points), len(lon_points)))
@@ -68,12 +68,42 @@ def compute_kendall_tau(year_cube, data_cube):
 
     return tau_matrix, p_matrix, lat_points, lon_points
 
+def compute_kendall_tau_models(years, data_cube):  # Use for model data
+    if data_cube.ndim != 3:
+        raise ValueError("Expected a 3D cube with dimensions (time, lat, lon)")
+
+    lat_points = data_cube.coord('latitude').points
+    lon_points = data_cube.coord('longitude').points
+    tau_matrix = np.empty((len(lat_points), len(lon_points)))
+    p_matrix = np.empty((len(lat_points), len(lon_points)))
+
+    for i in range(len(lat_points)):
+        for j in range(len(lon_points)):
+            data_series = data_cube.data[:, i, j]
+            if np.all(np.isnan(data_series)):
+                tau_matrix[i, j] = np.nan
+                p_matrix[i, j] = np.nan
+            else:
+                tau, p = stats.kendalltau(years, data_series)
+                tau_matrix[i, j] = tau
+                p_matrix[i, j] = p
+
+    return tau_matrix, p_matrix, lat_points, lon_points
+
 def save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, reanalysis, variable, t1, t2):
     tau_da = xr.DataArray(tau_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
     p_da = xr.DataArray(p_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
     os.makedirs(outdir, exist_ok=True)
     tau_da.to_netcdf(os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_mktau_{t1}-{t2}.nc"))
     p_da.to_netcdf(os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_p_{t1}-{t2}.nc"))
+    
+def save_positive_p_values(tau_matrix, p_matrix, lat_points, lon_points, outdir_pos_pvals, reanalysis, variable, t1, t2):
+    pos_p_matrix = np.where(tau_matrix > 0, p_matrix, np.nan)
+    pos_p_da = xr.DataArray(pos_p_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
+    filename = f"{reanalysis}{variable}_pos_p_{t1}-{t2}.nc"
+    pos_p_path = os.path.join(outdir_pos_pvals, filename)
+    pos_p_da.to_netcdf(pos_p_path)
+    print(f"Saved positive p-values to: {pos_p_path}")
 
 
 """

@@ -7,6 +7,7 @@ import matplotlib.cm as mpl_cm
 import numpy as np
 import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
+from Save_figure import save_figure
 
 # Parameters
 reanalysis = 'era5'
@@ -21,7 +22,7 @@ cmap_rb = mpl_cm.get_cmap('coolwarm', 15)
 # Load data
 trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
 template = iris.load_cube('template_cube_1deg.nc')
-model_mask, _ = lat_land_mask(trend, -60)
+model_mask, _ = lat_land_mask(trend, -60, 90)
 
 lon = template.coord('longitude').points
 lat = template.coord('latitude').points
@@ -60,15 +61,12 @@ for ax, label, (st_lon, st_lat) in zip(axs, labels, stipple_coords):
     gl.top_labels = False
     gl.right_labels = False
     ax.text(-175, 85, label, fontsize=14, weight='bold', transform=ccrs.PlateCarree())
-
-# Shared vertical colourbar
+    
 cbar = fig.colorbar(mesh, cax=cax, orientation='vertical', shrink = 0.3, pad=0.03)
 cbar.set_label('Trend in Tail Width (°C per decade)', fontsize=12)
 
-# Single title
 fig.suptitle(f"Trend in Tail Width\n{reanalysis} {variable.replace('_', ' ')} ({t1}-{t2})", fontsize=16)
-
-plt.savefig("/home/users/samuel.sancar/Documents/Heat_Extremes/CSSP_Images/ERA5_combined_trends_corrected.png", dpi=500, bbox_inches='tight')
+save_figure(plt, 'ERA5_p&fdr_trends', 'Maps')
 plt.show()
 
 

@@ -1,9 +1,8 @@
 """
-24/07/25
----------
-Plot and save Stat_sig (p-values) in MannKendall results for ERA5 tail width trends
 
-To run: python ERA5_MKstatsig_plot.py [1958] [2023]
+Code to plot JRA-55 significant tailwidths trends before FDR correction.
+
+To run: python JRA-55_MKstatsig_plot.py
 
 """
 
@@ -52,12 +51,12 @@ def plot_stippling(lat, lon, mask, reanalysis, variable, t1, t2):
     plt.show()
 
 def main():
-    reanalysis = 'era5'
+    reanalysis = 'jra55'
     t1 = int(sys.argv[1])
     t2 = int(sys.argv[2])
-    variable = 'daily_maximum_2m_temperature'
+    variable = '_minmax_surf.015_tmax.reg_tl319.'
 
-    datadir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends/'
+    datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
     out_path = datadir
 
     p_values = load_p_values(datadir, reanalysis, variable, t1, t2)

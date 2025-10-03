@@ -191,7 +191,7 @@ for j, (sst, fname) in enumerate(sst_regridded):
     all_fraction_gridpoints_sst.append((fname, fraction_gridpoints_sst))
 
 # Plot all threshold curves together
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(8, 8))
 y = -np.arange(0, 101, 1) + 100
 
 for fname, fraction_gridpoints_sst in all_fraction_gridpoints_sst:
@@ -201,7 +201,7 @@ plt.plot(np.arange(0, 101, 1), y, linestyle='--', color='black', label='1:1 Line
 plt.plot(np.arange(0, 101, 1), ERA5, marker='.', color='red', label='ERA5 agreement')
 plt.plot(np.arange(0, 101, 1), JRA55, marker='.', color='blue', label='JRA-55 agreement')
 
-plt.xlabel('X % of Models Less Than X at Grid Point')
+plt.xlabel('Percentage of models where trends are less X (where X is an ensemble member, ERA5 or JRA-55) per grid point')
 plt.ylabel('Percentage of Land Grid Points (%)')
 plt.title('Model Agreement Curves for ERA5 and SST Models')
 plt.grid(True)

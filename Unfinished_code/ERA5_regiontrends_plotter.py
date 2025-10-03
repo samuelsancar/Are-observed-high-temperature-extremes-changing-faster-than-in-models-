@@ -40,7 +40,6 @@ reglons = [[-5, 12], [95, 110], [-77, -66], [45, 60], [135, 150], [125, 142],
 datadir = '/data/users/samuel.sancar/Heat_extremes/trends/Reanalysis_trends/'
 trend = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
 
-
 # Download sea mask
 lsm = xr.open_dataset('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')['lsm'].squeeze()
 lsm_interp = lsm.interp(latitude=trend.latitude, longitude=trend.longitude, method="nearest")
@@ -53,7 +52,7 @@ lon2d, lat2d = np.meshgrid(lon, lat)
 statsig = xr.DataArray(data=np.load(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_{t1}-{t2}.npy"),dims=["latitude", "longitude"],coords={"latitude": lat, "longitude": lon},name="significance_mask")
 stipple_lats, stipple_lons = lat2d[statsig], lon2d[statsig]
 
-# Apply mask: keep land (1), mask sea (0)
+# Apply land sea mask
 masked_trends = trend.where(lsm_interp > 0.5)
 
 data_var = list(masked_trends.data_vars)[0]

@@ -31,12 +31,13 @@ masked_pvals = masked_pval_cube.data
 pvals_flat = masked_pvals.flatten()
 pvals_flat = pvals_flat[~np.isnan(pvals_flat)]
 
-# Initialise lists to store FDR and raw p-value percentages
+# Lists to store FDR and raw p-value percentages
 fdr_percentages = []
 raw_pval_percentages = []
 
 # Compute FDR and raw p-value coverage
 for alpha in alpha_levels:
+    
     # FDR correction
     rejected, _ = fdrcorrection(pvals_flat, alpha=alpha)
     fdr_percentage = 100 * np.sum(rejected) / num_land_points

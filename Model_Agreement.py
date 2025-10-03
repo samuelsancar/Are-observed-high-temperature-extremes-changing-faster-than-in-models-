@@ -115,14 +115,14 @@ lon2d, lat2d = np.meshgrid(lons, lats)
 
 # Create figure and axis
 fig = plt.figure(figsize=(14, 7))
-ax = plt.axes(projection=ccrs.PlateCarree())
-ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
+ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree(central_longitude=0))
 
-# Use a perceptually uniform colormap
+# Use colormap
 cmap = mpl_cm.get_cmap('coolwarm', 20)
 
 # Plot the data
-c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto')
+c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
 # Add refined map features
 ax.coastlines(resolution='50m', linewidth=0.8)
@@ -136,11 +136,11 @@ gl.top_labels = False
 gl.right_labels = False
 
 # Add colourbar
-cbar = plt.colorbar(c, ax=ax, orientation='vertical', pad=0.02, aspect=40)
-cbar.set_label('Fraction of Models Less Than ERA5', fontsize=12)
+cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
+cbar.set_label('Fraction of Models Less Than ERA5 trends', fontsize=12)
 
 # Add title
-plt.title('Model Agreement: Fraction of Models Less Than ERA5 (per grid point)', fontsize=16, weight='bold')
+plt.title('Fraction of ensemble members where trends are less than ERA5 trends (per grid point)', fontsize=16, weight='bold')
 
 # Final layout adjustments
 plt.tight_layout()
