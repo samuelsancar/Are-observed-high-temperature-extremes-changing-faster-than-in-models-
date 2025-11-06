@@ -91,11 +91,10 @@ def compute_kendall_tau_models(years, data_cube):  # Use for model data
     return tau_matrix, p_matrix, lat_points, lon_points
 
 def save_results(tau_matrix, p_matrix, lat_points, lon_points, outdir, reanalysis, variable, t1, t2):
-    tau_da = xr.DataArray(tau_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
     p_da = xr.DataArray(p_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
     os.makedirs(outdir, exist_ok=True)
-    tau_da.to_netcdf(os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_mktau_{t1}-{t2}.nc"))
     p_da.to_netcdf(os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_p_{t1}-{t2}.nc"))
+    print(f"Saved p-values")
     
 def save_positive_p_values(tau_matrix, p_matrix, lat_points, lon_points, outdir_pos_pvals, reanalysis, variable, t1, t2):
     pos_p_matrix = np.where(tau_matrix > 0, p_matrix, np.nan)

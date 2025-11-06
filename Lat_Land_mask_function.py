@@ -1,5 +1,6 @@
 """
     Function to apply land and latitude mask to 2D iris cubes or 3D iris cubes/lists. Latitude mask can be chosen.
+    Function also applies mask for trends where the 87.5th quantile is decreasing.
 
     Returns masked_cube, no_of_gridpoints
 
@@ -19,9 +20,9 @@ def lat_land_mask(model, min_threshold, max_threshold):
     # Create land mask
     land_mask = np.squeeze(lsm_regridded.data) > 0.5
 
-    # Create latitude mask
     latitudes = template.coord('latitude').points
-    lat_mask = (latitudes >= min_threshold) & (latitudes <= max_threshold)
+    latitudes = np.array(latitudes, dtype=np.float64)  # Force float64 explicitly
+    lat_mask = (latitudes >= float(min_threshold)) & (latitudes <= float(max_threshold))
     lat_mask_2d = np.repeat(lat_mask[:, np.newaxis], land_mask.shape[1], axis=1)
 
     # Combine masks
@@ -35,7 +36,7 @@ def lat_land_mask(model, min_threshold, max_threshold):
         attributes = model.attributes
     elif isinstance(model, np.ndarray):
         model_data = model
-        units = '1'  # Default unit for agreement fraction
+        units = '1'
         attributes = {}
     else:
         raise TypeError("Input 'model' must be an Iris cube or a NumPy array.")
@@ -57,18 +58,30 @@ def lat_land_mask(model, min_threshold, max_threshold):
     return masked_cube, no_of_gridpoints
 
 def ThreeD_lat_land_mask(model, min_threshold, max_threshold):
+    import iris
+    import numpy as np
+
+    # Load template and land-sea mask
     template = iris.load_cube('template_cube_1deg.nc')
     lsm = iris.load_cube('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')
     lsm_regridded = lsm.regrid(template, iris.analysis.Nearest())
 
+    # Create land mask
     land_mask = np.squeeze(lsm_regridded.data) > 0.5
+
+    # Create latitude mask
     latitudes = template.coord('latitude').points
+    latitudes = np.array(latitudes, dtype=np.float64)  # Force float64 explicitly
+    min_threshold = float(min_threshold)
+    max_threshold = float(max_threshold)
     lat_mask = (latitudes >= min_threshold) & (latitudes <= max_threshold)
     lat_mask_2d = np.repeat(lat_mask[:, np.newaxis], land_mask.shape[1], axis=1)
 
+    # Combine masks
     combined_mask = land_mask & lat_mask_2d
     no_of_gridpoints = np.count_nonzero(combined_mask)
 
+    # Handle model input: Iris cube only
     if isinstance(model, iris.cube.Cube):
         model_data = model.data
         units = model.units
@@ -80,11 +93,22 @@ def ThreeD_lat_land_mask(model, min_threshold, max_threshold):
     # Expand mask to 3D
     expanded_mask = np.broadcast_to(combined_mask, model_data.shape)
 
+    # Apply mask
     masked_data = np.where(expanded_mask, model_data, np.nan)
 
-    lat_coord = template.coord('latitude')
-    lon_coord = template.coord('longitude')
+    # Slice coordinates to match masked_data shape
+    lat_coord = iris.coords.DimCoord(
+        template.coord('latitude').points[:masked_data.shape[1]],
+        standard_name='latitude',
+        units='degrees'
+    )
+    lon_coord = iris.coords.DimCoord(
+        template.coord('longitude').points[:masked_data.shape[2]],
+        standard_name='longitude',
+        units='degrees'
+    )
 
+    # Wrap masked data into an Iris cube
     masked_cube = iris.cube.Cube(
         masked_data.astype(np.float32),
         dim_coords_and_dims=[

@@ -13,8 +13,8 @@ from Lat_Land_mask_function import lat_land_mask
 template = iris.load_cube('template_cube_1deg.nc')
 
 # Load model trends
-coupled_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*')
-sst_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*')
+coupled_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend.nc')
+sst_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend.nc')
 
 # Regrid model trends
 coupled_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in coupled_files]

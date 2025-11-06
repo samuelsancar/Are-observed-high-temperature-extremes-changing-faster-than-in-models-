@@ -16,6 +16,8 @@
 import iris
 import iris.coord_categorisation
 import numpy as np
+import os
+import xarray as xr
 
 def bootstrap_tailwidth_trends(data_cube, iterations=1000, alpha=0.05):
     
@@ -29,10 +31,10 @@ def bootstrap_tailwidth_trends(data_cube, iterations=1000, alpha=0.05):
     lat_points = data_cube.coord('latitude').points
     lon_points = data_cube.coord('longitude').points
 
-    # Prepare output arrays
+    # Output arrays
     slopes_matrix = np.empty((len(lat_points), len(lon_points)))
     quantiles_matrix = np.empty((len(lat_points), len(lon_points), 4))  # For 4 quantiles
-    sig_matrix = np.empty((len(lat_points), len(lon_points)))
+    b_matrix = np.empty((len(lat_points), len(lon_points)))
 
     rng = np.random.default_rng()
 
@@ -57,10 +59,19 @@ def bootstrap_tailwidth_trends(data_cube, iterations=1000, alpha=0.05):
             # Store mean slope and quantiles
             slopes_matrix[i, j] = np.mean(slopes)
             quantiles_matrix[i, j, :] = np.quantile(slopes, [0.025, 0.05, 0.95, 0.975])
-            sig_matrix[i, j] = ((quantiles_matrix[i, j] > (alpha/2) and slopes_matrix[i, j] > 0) or (quantiles_matrix[i, j] < (1-alpha/2) and slopes_matrix[i, j] < 0))
+            b_matrix[i, j] = ((np.any((quantiles_matrix > (alpha/2))<0) and np.any(slopes_matrix > 0)) or np.any((quantiles_matrix < (1-alpha/2))>0) and np.any(slopes_matrix < 0))
+
                 
 
-    return sig_matrix, slopes_matrix, quantiles_matrix
+    return b_matrix, slopes_matrix, quantiles_matrix, lat_points, lon_points
+
+def save_results_b_mask(b_matrix, lat_points, lon_points):      
+    p_da = xr.DataArray(b_matrix, coords={"latitude": lat_points, "longitude": lon_points}, dims=["latitude", "longitude"])
+    outdir = '/home/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+    os.makedirs(outdir, exist_ok=True)
+    p_da.to_netcdf(os.path.join(outdir, f"era5_daily_maximum_2m_temperature_tailwidth_b_mask_1958-2023.nc"))
+
+
 
 
 
