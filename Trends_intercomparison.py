@@ -15,9 +15,13 @@ import matplotlib.cm as mpl_cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from Lat_Land_mask_function import lat_land_mask
+from Save_figure_function import save_figure
 
 # Load regridding template
 template = iris.load_cube('template_cube_1deg.nc')
+
+lat_minimum = -60
+lat_maximum = 90
 
 # Load ERA5 agreement plot
 ERA5 = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_agreement.npy')
@@ -30,8 +34,8 @@ jradir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 jra55 = iris.load_cube(f"{jradir}jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc")
 
 # Get list of filenames
-coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*'))
-sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*'))
+coupled_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend.nc'))
+sst_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend.nc'))
 
 # Load cubes and pair with filenames
 coupled_files = [(iris.load_cube(fname), fname) for fname in coupled_filenames]
@@ -77,26 +81,27 @@ for i, (coupled, fname) in enumerate(coupled_regridded):
     lon2d, lat2d = np.meshgrid(lons, lats)
 
     # Plot individual map
-    fig = plt.figure(figsize=(14, 7))
-    ax = plt.axes(projection=ccrs.PlateCarree())
-    ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
-    cmap = mpl_cm.get_cmap('coolwarm', 20)
-    c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto')
+    #fig = plt.figure(figsize=(12, 6))
+    #ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+    #ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
+    
+    #cmap = mpl_cm.get_cmap('coolwarm', 20)
+    #c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
-    ax.coastlines(resolution='50m', linewidth=0.8)
-    ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
-    ax.add_feature(cfeature.LAND, facecolor='lightgray')
-    ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
+    #ax.coastlines(resolution='50m', linewidth=0.8)
+    #ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
+    #ax.add_feature(cfeature.LAND, facecolor='lightgray')
+    #ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
 
-    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-    gl.top_labels = False
-    gl.right_labels = False
+    #gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    #gl.top_labels = False
+    #gl.right_labels = False
 
-    cbar = plt.colorbar(c, ax=ax, orientation='vertical', pad=0.02, aspect=40)
-    cbar.set_label(f'Fraction of models less then {model_name}', fontsize=10)
+    #cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
+    #cbar.set_label(f'Fraction of models less then {model_name}', fontsize=10)
 
-    plt.title(f'Model intercomparison plot for coupled {model_name} (1958-2022)', fontsize=16, weight='bold')
-    plt.tight_layout()
+    #plt.title(f'Model intercomparison plot for coupled {model_name} (1958-2022)', fontsize=16, weight='bold')
+    #plt.tight_layout()
     #plt.show()
 
     # Calculate threshold curve
@@ -123,7 +128,7 @@ plt.title('Model Agreement Curves for ERA5 and Coupled Models')
 plt.grid(True)
 plt.legend(loc='best', fontsize='small')
 plt.tight_layout()
-plt.show()
+#plt.show()
 
 # Store threshold curves for all models
 all_fraction_gridpoints_sst = []
@@ -158,28 +163,32 @@ for j, (sst, fname) in enumerate(sst_regridded):
     lons = template.coord('longitude').points
     lon2d, lat2d = np.meshgrid(lons, lats)
 
-    # Plot individual map
-    fig = plt.figure(figsize=(14, 7))
-    ax = plt.axes(projection=ccrs.PlateCarree())
-    ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
-    cmap = mpl_cm.get_cmap('coolwarm', 20)
-    c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto')
+    if model_name == 'HadGEM3-GC31-HM_r1i2p1f1':
+        # Plot individual map
+        fig = plt.figure(figsize=(12, 6))
+        ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+        ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
 
-    ax.coastlines(resolution='50m', linewidth=0.8)
-    ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
-    ax.add_feature(cfeature.LAND, facecolor='lightgray')
-    ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
+        cmap = mpl_cm.get_cmap('coolwarm', 20)
+        c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
-    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-    gl.top_labels = False
-    gl.right_labels = False
+        ax.coastlines(resolution='50m', linewidth=0.8)
+        ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
+        ax.add_feature(cfeature.LAND, facecolor='lightgray')
+        ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
 
-    cbar = plt.colorbar(c, ax=ax, orientation='vertical', pad=0.02, aspect=40)
-    cbar.set_label(f'Fraction of models less than {model_name}', fontsize=11)
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = False
+        gl.right_labels = False
 
-    plt.title(f'Model intercomparison map for SST {model_name} (1958-2022)', fontsize=16, weight='bold')
-    plt.tight_layout()
-    #plt.show()
+        cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
+        cbar.set_label(f'Fraction of models with trends less than a) ERA5, b) HadGEM3-GC31-HM highresSST-present r1i2p1f1', fontsize=11)
+        plt.title(f'Fraction of ensemble members where trends are less than \n HadGEM3-GC31-HM highresSST-present r1i2p1f1 trends (per gridpoint)', fontsize=12, weight='bold')
+        plt.tight_layout()
+        save_figure(plt, 'HadGEM-GC31-HM_SST_trend_intercomparison', 'Maps')
+        plt.show()
+        
+        
 
 
     # Calculate threshold curve

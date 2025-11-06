@@ -20,7 +20,6 @@ template = iris.load_cube('template_cube_1deg.nc')
 coupled_files = iris.load('/data/users/samuel.sancar/Heat_extremes/trends/Coupled_model_trends/*')
 sst_files = iris.load('/data/users/samuel.sancar/Heat_extremes/trends/SST_model_trends/*')
 
-
 coupled_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in coupled_files]
 sst_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in sst_files]
 

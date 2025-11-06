@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 from Lat_Land_mask_function import lat_land_mask
+from Save_figure_function import save_figure
 
 # Read command-line arguments
 reanalysis = 'era5'
@@ -37,8 +38,8 @@ jra_data = masked_trend_jra.data.flatten()
 jra_data = jra_data[~np.isnan(jra_data)]
 
 # Load model data
-coupled_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*'))
-sst_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*'))
+coupled_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend.nc'))
+sst_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend.nc'))
 coupled_data = [iris.load_cube(f) for f in coupled_files]
 sst_data = [iris.load_cube(f) for f in sst_files]
 
@@ -64,28 +65,33 @@ plt.tight_layout()
 plt.show()
 
 # --- SST Models Histogram ---
-plt.figure(figsize=(10, 8))
+plt.figure(figsize=(14, 12))
 for cube in sst_data:
     masked_model, _ = lat_land_mask(cube, -60, 90)
     model_data = masked_model.data.flatten()
     model_data = model_data[~np.isnan(model_data)]
-    plt.hist(model_data, bins=bins, range = (-0.5, 1.0), histtype='stepfilled', alpha=0.2, color='lightgreen', edgecolor='black')
+    plt.hist(model_data, bins=bins, range = (-0.5, 1.5), histtype='stepfilled', alpha=0.2, color='lightgreen', edgecolor='black')
 for cube in coupled_data:
     masked_model, _ = lat_land_mask(cube, -60, 90)
     model_data = masked_model.data.flatten()
     model_data = model_data[~np.isnan(model_data)]
-    plt.hist(model_data, bins=bins, range = (-0.5, 1.0),histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
-plt.hist(era5_data, bins=bins, range = (-0.5, 1.0), histtype='step', color='red', linewidth=2.5, linestyle='--', label='ERA5')
-plt.hist(jra_data, bins=bins, range = (-0.5, 1.0), histtype='step', color='blue', linewidth=2.5, linestyle='-.', label='JRA-55')
-plt.xlabel('Trend Magnitude (°C per Decade)', fontsize=13, fontweight='bold')
-plt.ylabel('Number of Grid Points', fontsize=13, fontweight='bold')
+    plt.hist(model_data, bins=bins, range = (-0.5, 1.5),histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
+plt.hist(era5_data, bins=bins, range = (-0.5, 1.5), histtype='step', color='red', linewidth=2.5, linestyle='--', label='ERA5')
+plt.hist(jra_data, bins=bins, range = (-0.5, 1.5), histtype='step', color='blue', linewidth=2.5, linestyle='-.', label='JRA-55')
+plt.xlabel('Trend Magnitude (°C per Decade)', fontsize=20, fontweight='bold')
+plt.xticks(fontsize = 15)
+plt.ylabel('Number of Grid Points', fontsize=15, fontweight='bold')
+plt.yticks(fontsize = 15)
 
 # Set x-axis limit
-plt.xlim(-0.5, 1.0)
+plt.xlim(-0.5, 1.5)
 
-plt.title('Tail Width Trend Histogram for Models, ERA5 and JRA-55 (1958–2022)', fontsize=15, fontweight='bold')
-plt.legend(loc='upper right', fontsize=12)
+plt.title('Tail Width Trend Histogram for Models, ERA5 and JRA-55', fontsize=20, fontweight='bold')
+plt.legend(loc='upper right', fontsize=15)
 plt.grid(True, linestyle='--', alpha=0.6)
-plt.tight_layout()
+#plt.tight_layout()
+#save_figure(plt, 'Trend_magnitude_histogram', 'Graphs')
 plt.show()
+
+
 

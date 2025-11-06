@@ -17,11 +17,11 @@ import iris.quickplot as qplt
 import os
 
 #Beginning & end year
-t1 = 1958
+t1 = 1994
 t2 = 2023
 
 datadir = '/data/users/samuel.sancar/Heat_extremes/Merged_ERA5_cubes/'
-outdir = '/data/users/samuel.sancar/Heat_extremes/tailwidthslist/'
+outdir = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'
 template = iris.load_cube('template_cube_1deg.nc')
 
 reanalysis = 'era5'

@@ -54,13 +54,27 @@ def save_positive_p_values(tau_matrix, p_matrix, lat_points, lon_points, filenam
     pos_p_da.to_netcdf(pos_p_path)
     print(f"Saved: {pos_p_path}")
 
+import iris
+
 def load_valid_cube(filepath):
     try:
         cubes = iris.load(filepath)
+
+        # Determine mode (SST vs Coupled)
+        Mode = 'SST' if filepath.split('/')[-1].split('_')[1] == 'highresSST-present' else 'Coupled'
+        Model = filepath.split('/')[-1].split('_')[0]
+        experiment = filepath.split('/')[-1].split('_')[1]
+        member = filepath.split('/')[-1].split('_')[2]
+
+        p87p5_dir = f'/data/users/samuel.sancar/Heat_extremes/Trends/{Mode}_model_trends/'
+        p87p5_cube = iris.load_cube(p87p5_dir + f'{Model}_{experiment}_{member}_p87p5_trend.nc')
+
+        # Relaxed check: only require time dimension and 3D shape
         for cube in cubes:
-            if cube.ndim == 3 and cube.shape[0] == len(years):
-                return cube
-        raise ValueError("No valid 3D cube with expected time dimension found.")
+            if cube.ndim == 3 and cube.coord('time'):
+                return cube, p87p5_cube
+
+        raise ValueError("No valid 3D cube with time dimension found.")
     except Exception as e:
         raise RuntimeError(f"Failed to load cube from {filepath}: {e}")
 
@@ -80,15 +94,18 @@ def process_model_files(filenames):
     for f in filenames:
         print(f"\nProcessing file: {f}")
         try:
-            cube = load_valid_cube(f)
+            cube, p87p5_cube = load_valid_cube(f)
         except Exception as e:
             print(e)
             continue
 
         try:
             cube_regridded = cube.regrid(template_cube, iris.analysis.Linear())
-            masked_cube, _ = ThreeD_lat_land_mask(cube_regridded, lat_minimum, lat_maximum)
-            tau_matrix, p_matrix, lat_points, lon_points = compute_kendall_tau_models(years, masked_cube)
+            data_cube, _ = ThreeD_lat_land_mask(cube_regridded, lat_minimum, lat_maximum)
+            masked_data = np.where(p87p5_cube.data < 0, np.nan, data_cube.data)
+            data_cube_masked = data_cube.copy()
+            data_cube_masked.data = masked_data
+            tau_matrix, p_matrix, lat_points, lon_points = compute_kendall_tau_models(years, data_cube_masked)         
             save_results(tau_matrix, p_matrix, lat_points, lon_points, f)
             save_positive_p_values(tau_matrix, p_matrix, lat_points, lon_points, f)  # <-- Saving positive p-values
             processed += 1
