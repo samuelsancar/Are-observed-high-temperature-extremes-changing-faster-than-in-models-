@@ -20,7 +20,7 @@ from Lat_Land_mask_function import lat_land_mask
 
 variable = 'daily_maximum_2m_temperature'
 reanalysis = 'era5'
-significant = sys.argv[1]  # Choose from 'pos_p', 
+significant = sys.argv[1]  # Choose from 'positive' or 'all', 
 
 # Load template cube
 template_cube = iris.load_cube('template_cube_1deg.nc')
@@ -45,7 +45,6 @@ era5_cube = iris.load_cube(f"{datadir}{reanalysis}_{variable}_{era5_name}_1958-2
 datadir_jra = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 jra_cube = iris.load_cube(f"{datadir_jra}{jra_name}")
 
-# Apply land and latitude mask to ERA5
 era5_masked_cube = era5_cube
 era5_data = era5_masked_cube.data.flatten()
 era5_data = era5_data[~np.isnan(era5_data)]
@@ -170,19 +169,20 @@ print(f"JRA-55 significant grid points: {sum_jra_sig_gridpoints}, Percentile: {j
 print(f"ERA5 significant area: {era5_sig_area}, Percentile: {era5_area_percentile:.2f}%")
 print(f"JRA-55 significant area: {jra_sig_area}, Percentile: {jra_are_percentile:.2f}%")
 
+plt.style.use('ggplot')
+
 plt.figure(figsize=(12, 7))
 counts, bins, patches = plt.hist(
     significant_gridpoints,
     bins=10,
     range=(significant_gridpoints_array.min(), significant_gridpoints_array.max()),
     histtype='bar',
-    color='#4682B4',  # Steel blue
+    color='#4682B4', 
     alpha=0.85,
     edgecolor='white',
     linewidth=2
 )
 
-# Label histogram at ERA5 value
 plt.axvline(x=sum_era5_sig_gridpoints, color='#D7263D', linestyle='--', linewidth=2.5, label='ERA5 Value')
 plt.text(
     sum_era5_sig_gridpoints + 50, max(counts) * 0.92, 'ERA5',
@@ -190,7 +190,6 @@ plt.text(
     bbox=dict(facecolor='white', edgecolor='#D7263D', boxstyle='round,pad=0.3', alpha=0.8)
 )
 
-# Label histogram at JRA-55 value
 plt.axvline(x=sum_jra_sig_gridpoints, color='#1B998B', linestyle='--', linewidth=2.5, label='JRA-55 Value')
 plt.text(
     sum_jra_sig_gridpoints + 50, max(counts) * 0.82, 'JRA-55',
@@ -198,36 +197,31 @@ plt.text(
     bbox=dict(facecolor='white', edgecolor='#1B998B', boxstyle='round,pad=0.3', alpha=0.8)
 )
 
-# title
 plt.xlabel('Number of Significant Grid Points', fontsize=15, fontweight='bold')
 plt.ylabel('Number of Models', fontsize=15, fontweight='bold')
-plt.title(f'Histogram of Grid Points with significant tail-width {graph_name} (1958–2022)', fontsize=18, fontweight='bold')
+plt.title(f'Histogram of Grid Points with significant {graph_name} (1958–2022)', fontsize=18, fontweight='bold')
 
-# Ticks and grid
 plt.xticks(fontsize=13)
 plt.yticks(fontsize=13)
 plt.grid(True, linestyle='--', alpha=0.5, linewidth=1.2)
 
-# Legend
-plt.legend(fontsize=13, loc='upper right', frameon=False)
+#plt.legend(fontsize=13, loc='upper right', frameon=False)
 plt.tight_layout()
 plt.show()
-
 
 # Histogram for significant area
 plt.figure(figsize=(12, 7))
 counts, bins, patches = plt.hist(
     significant_area,
     bins=10,
-    range=(significant_area_array.min(), 320000000000),
+    range=(significant_area_array.min(), significant_area_array.max()),
     histtype='bar',
-    color='#4682B4',  # Steel blue
+    color='#4682B4', 
     alpha=0.85,
     edgecolor='white',
     linewidth=2
 )
 
-# Label histogram at ERA5 value
 plt.axvline(x=era5_sig_area, color='#D7263D', linestyle='--', linewidth=2.5, label='ERA5 Value')
 plt.text(
     era5_sig_area + 50, max(counts) * 0.92, 'ERA5',
@@ -243,18 +237,15 @@ plt.text(
     bbox=dict(facecolor='white', edgecolor='#1B998B', boxstyle='round,pad=0.3', alpha=0.8)
 )
 
-# title
 plt.xlabel('Area of significant trends', fontsize=15, fontweight='bold')
 plt.ylabel('Number of Models', fontsize=15, fontweight='bold')
-plt.title(f'Histogram of total area with significant tail-width {graph_name} (1958–2022)', fontsize=18, fontweight='bold')
+plt.title(f'Histogram of Total Area with significant {graph_name} (1958–2022)', fontsize=18, fontweight='bold')
 
-# Ticks and grid
 plt.xticks(fontsize=13)
 plt.yticks(fontsize=13)
 plt.grid(True, linestyle='--', alpha=0.5, linewidth=1.2)
 
-# Legend
-plt.legend(fontsize=13, loc='upper right', frameon=False)
+#plt.legend(fontsize=13, loc='upper right', frameon=False)
 plt.tight_layout()
 plt.show()
 

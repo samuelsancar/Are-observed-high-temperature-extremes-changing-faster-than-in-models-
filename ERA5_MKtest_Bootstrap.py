@@ -15,7 +15,7 @@ import xarray as xr
 import iris
 import os
 from MK_functions import (load_and_mask_yearly_data,create_time_coord,stack_cubes,create_year_cube,compute_kendall_tau, save_results, save_positive_p_values)
-from Bootstrap_function import bootstrap_tailwidth_trends, save_results_b_mask
+from Unfinished_code.Bootstrap_function import bootstrap_tailwidth_trends, save_results_b_mask
 
 def significance_plot(lat_minimum, lat_maximum):      # Function is called when using ERA5_trend_plotter.py
     datadir = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'

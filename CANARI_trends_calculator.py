@@ -22,7 +22,7 @@ t2 = 2023
 outtrend = '/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/'
 outtailwidth = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari/'
 
-for member in range(24,41):
+for member in range(23,24):
     
     datadir = f'/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari/member{member}/'
     
