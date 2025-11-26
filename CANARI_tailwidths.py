@@ -53,7 +53,7 @@ def process_file(file_path):
         return None
 
 # Loop over members
-for member in range(36, 41):
+for member in range(23, 24):
     data_path = f"{base_data_path}/member{member}"
     member_output_dir = os.path.join(output_base_dir, f"member{member}")
     os.makedirs(member_output_dir, exist_ok=True)

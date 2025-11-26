@@ -1,5 +1,5 @@
 """
-01/08/25
+07/11/25
 ---------
 Code to calculate standard deviation in model trands for daily tasmax tailwidths.
 
@@ -7,19 +7,19 @@ To run: python Model_std.py
 
 """
 
-import xarray as xr
-import numpy as np
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import iris
+import numpy as np
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-
+# Load template and data cubes
 template = iris.load_cube('template_cube_1deg.nc')
 
-coupled_files = iris.load('/data/users/samuel.sancar/Heat_extremes/trends/Coupled_model_trends/*')
-sst_files = iris.load('/data/users/samuel.sancar/Heat_extremes/trends/SST_model_trends/*')
+coupled_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend.nc')
+sst_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend.nc')
 
+# Regrid all cubes to template
 coupled_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in coupled_files]
 sst_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in sst_files]
 
@@ -27,43 +27,61 @@ sst_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in sst_f
 lsm = iris.load_cube('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')
 lsm_regridded = lsm.regrid(template, iris.analysis.Nearest())
 
-# Mask for land
 land = np.squeeze(lsm_regridded.data) > 0.5
-no_of_gridpoints = np.count_nonzero(land)
 
-# Get latitude points
+# Latitude mask (exclude Antarctica)
 latitudes = template.coord('latitude').points
-
-# Create a 2D mask for latitudes >= -60 (exclude Antarctica)
 lat_mask = latitudes >= -60
 lat_mask_2d = np.repeat(lat_mask[:, np.newaxis], land.shape[1], axis=1)
 
 land_mask = land & lat_mask_2d
 
-# Stack all models into a 3D array (n_models, lat, lon)
-model_stack = np.concatenate([np.array([cube.data for cube in coupled_regridded]),np.array([cube.data for cube in sst_regridded])],axis=0)  
+# Clean data function
+def clean_data(cube):
+    data = cube.data
+    if hasattr(data, 'mask'):
+        data = np.ma.filled(data, np.nan)
+    data = np.where(np.abs(data) > 1e10, np.nan, data)  # remove absurd fill values
+    return np.nan_to_num(data, nan=0.0)
 
-# for each grid point, the fraction of models where model trend <= ERA5
-std = np.std(model_stack, axis=0)  
 
-# Only consider land points
+# Stack models into 3D array
+coupled_array = np.array([clean_data(cube) for cube in coupled_regridded])
+sst_array = np.array([clean_data(cube) for cube in sst_regridded])
+
+model_stack = np.vstack([coupled_array, sst_array])  # shape (n_models, lat, lon)
+print(f"model_stack shape: {model_stack.shape}")
+print("Any absurd values left?", np.any(np.abs(model_stack) > 1e10))
+
+# Compute standard deviation and mean
+std = np.nanstd(model_stack, axis=0)
+mean = np.nanmean(model_stack, axis=0)
+
+print(f"STD min: {np.nanmin(std):.4f}, max: {np.nanmax(std):.4f}")
+print(f"Mean min: {np.nanmin(mean):.4f}, max: {np.nanmax(mean):.4f}")
+
+
+# Land mask
 std_land = np.where(land_mask, std, np.nan)
+mean_land = np.where(land_mask, mean, np.nan)
 
-fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.PlateCarree())
+# Plotting functions
+def plot_map(data, title, cmap, vmin=None, vmax=None, label=''):
+    fig = plt.figure(figsize=(12, 6))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    lats = template.coord('latitude').points
+    lons = template.coord('longitude').points
+    lon2d, lat2d = np.meshgrid(lons, lats)
 
-# lats/lons from template cube
-lats = template.coord('latitude').points
-lons = template.coord('longitude').points
-lon2d, lat2d = np.meshgrid(lons, lats)
-std_plot = np.where(lat2d >= -60, std_land, np.nan)
+    c = ax.pcolormesh(lon2d, lat2d, data, cmap=cmap, vmin=vmin, vmax=vmax, shading='auto')
+    ax.coastlines(resolution='50m', linewidth=1)
+    ax.add_feature(cfeature.LAND, facecolor='none')
+    ax.add_feature(cfeature.OCEAN, facecolor='white')
+    plt.colorbar(c, ax=ax, orientation='horizontal', label=label)
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
 
-c = ax.pcolormesh(lon2d, lat2d, np.squeeze(std_plot), cmap='coolwarm', vmin=0, vmax=0.175, shading='auto')
-
-ax.coastlines(resolution='50m', linewidth=1)
-ax.add_feature(cfeature.LAND, facecolor='none')
-ax.add_feature(cfeature.OCEAN, facecolor='white')
-plt.colorbar(c, ax=ax, orientation='vertical', label='Standard deviation of model trends')
-plt.title('Standard deviation of model trends (per grid point)')
-plt.tight_layout()
-plt.show()
+# Plot STD and Mean
+plot_map(std_land, 'Standard deviation of model trends (per grid point)', cmap='coolwarm', vmin=0, vmax=0.175, label='Std Dev')
+plot_map(mean_land, 'Mean of model trends (per grid point)', cmap='RdBu_r', vmin=-0.2, vmax=0.2, label='Mean Trend')

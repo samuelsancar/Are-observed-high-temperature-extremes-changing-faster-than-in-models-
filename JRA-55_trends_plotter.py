@@ -37,7 +37,6 @@ variable = '_minmax_surf.015_tmax.reg_tl319.'
 
 # Load trend data
 datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
-p87p5_data = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
 p87p5_trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_p87p5_trends_{t1}-{t2}.nc")
 template = iris.load_cube('template_cube_1deg.nc')
