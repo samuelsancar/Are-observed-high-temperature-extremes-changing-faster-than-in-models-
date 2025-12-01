@@ -9,25 +9,20 @@ import matplotlib.cm as mpl_cm
 from BnD_error_function import binomial_uncertainty
 from Lat_Land_mask_function import lat_land_mask
 
-# Load template
 template = iris.load_cube('template_cube_1deg.nc')
 
-# Load model trends
 coupled_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend.nc')
 sst_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend.nc')
 
-# Regrid model trends
 coupled_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in coupled_files]
 sst_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in sst_files]
 
-# Load and regrid ERA5 trends
 era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
 era5_regridded = era5.regrid(template, iris.analysis.Linear())
 
 jra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc')
 #jra_regridded = jra.regrid(template, iris.analysis.Linear())
 
-# Apply mask to ERA5 data 
 era5_masked_cube, _ = lat_land_mask(era5_regridded.data, -60, 90)
 era5_masked = era5_masked_cube.data
 
@@ -42,7 +37,6 @@ model_stack = np.concatenate([np.array([cube.data for cube in coupled_regridded]
 agreement = np.mean(model_stack <= era5_masked, axis=0)
 agreement_jra = np.mean(model_stack <= jra_masked, axis=0)
 
-# Apply new land and latitude mask
 agreement_masked_cube, n_gridpoints = lat_land_mask(agreement, -60, 90)
 agreement_land = agreement_masked_cube.data
 agreement_jra_masked_cube, n_gridpoints_jra = lat_land_mask(agreement_jra, -60, 90)
@@ -96,7 +90,7 @@ for thresh in thresholds:
     total_area = np.sum(area_weights)
     fraction_area_list.append(100 * area / total_area)
 
-# Full gridpoints
+# 100% gridpoints
 OHpcnt_grid_points = (agreement_land >= 1) & (~np.isnan(agreement_land))
 OHpcnt_k = np.count_nonzero(OHpcnt_grid_points)
 OHpcnt_fraction_gridpoints = 100 * k / n_gridpoints

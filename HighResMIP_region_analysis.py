@@ -243,10 +243,10 @@ for i in range(n_regions):
 
 # Global legend
 handles, lbls = axes[0, 0].get_legend_handles_labels()
-fig.legend(handles, lbls, loc='outside upper left', bbox_to_anchor=(0.735, 0.995), ncol=4, fontsize=10)
+fig.legend(handles, ['Pseudo Obs','JRA-55', 'ERA5'], loc='outside upper left', bbox_to_anchor=(0.735, 0.995), ncol=4, fontsize=10)
 
 # Figure title
-fig.suptitle(f'Regional Tailwidth Trends ({member})', fontsize=12, fontweight='bold')
+fig.suptitle(f'Pseudo obs: {member})', fontsize=12, fontweight='bold')
 
 #plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.savefig(f"Beautiful_Tailwidth_Trends_{member}.png", dpi=300)

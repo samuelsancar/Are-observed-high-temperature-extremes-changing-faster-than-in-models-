@@ -27,6 +27,7 @@ CANARI_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in CA
 
 # Load and regrid ERA5 trends
 era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
+ERA5_OHpcnt = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_OHpcnt_grids_CANARI.npy')
 era5_regridded = era5.regrid(template, iris.analysis.Linear())
 
 jra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc')
@@ -50,7 +51,6 @@ model_stack_include_era5 = np.concatenate([np.array([cube.data for cube in CANAR
 agreement = np.mean(model_stack_include_jra <= era5_masked, axis=0)
 agreement_jra = np.mean(model_stack_include_era5 <= jra_masked, axis=0)
 
-# Apply new land and latitude mask and include 'other' reanalysis
 agreement_masked_cube, n_gridpoints = lat_land_mask(agreement, -60, 90)
 agreement_land = agreement_masked_cube.data
 agreement_jra_masked_cube, n_gridpoints_jra = lat_land_mask(agreement_jra, -60, 90)
@@ -103,11 +103,11 @@ for thresh in thresholds:
     total_area = np.sum(area_weights)
     fraction_area_list.append(100 * area / total_area)
 
-full = 100 * np.count_nonzero(agreement_land >= 1 & ~np.isnan(agreement_land)) / n_gridpoints
-full_jra55 = 100 * np.count_nonzero(agreement_land_jra >= 1 & ~np.isnan(agreement_land_jra)) / n_gridpoints
+OHpcnt = 100 * np.count_nonzero(agreement_land >= 1 & ~np.isnan(agreement_land)) / n_gridpoints
+OHpcnt_jra55 = 100 * np.count_nonzero(agreement_land_jra >= 1 & ~np.isnan(agreement_land_jra)) / n_gridpoints
 number = np.count_nonzero(agreement_land >= 1 & ~np.isnan(agreement_land))
 number_jra = np.count_nonzero(agreement_land_jra >= 1 & ~np.isnan(agreement_land_jra))
-print(f'ERA5 covers {full}% of the globe ({number} gridpoints) where it has greater trends than 100% of models, whilst JRA55 covers {full_jra55}% of the globe ({number_jra} gridpoints)where it has greater trends than 100% of models')
+print(f'ERA5 covers {OHpcnt}% of the globe ({number} gridpoints) where it has greater trends than 100% of models, whilst JRA55 covers {OHpcnt_jra55}% of the globe ({number_jra} gridpoints)where it has greater trends than 100% of models')
 
 # 1:1 line
 y = -np.arange(0, 101, 1) + 100
@@ -117,19 +117,27 @@ lower_errors = np.maximum(0, np.array(p_low_list))
 upper_errors = np.maximum(0, np.array(p_high_list))
 xerr = [lower_errors, upper_errors]
 
-# Save model agreement
+# Save variables
 outpath = "/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/"
 outpath_jra = "/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/"
 filename = "CANARI_ERA5_agreement.npy"
+filename_fractions = "CANARI_ERA5_gridpoint_fractions.npy"
 filename_area = "CANARI_ERA5_area.npy"
-filename_jra = "CANARI_JRA55_agreement.npy"    
+filename_jra = "CANARI_JRA55_agreement.npy"   
+OHpcnt_filename = "ERA5_OHpcnt_grids_CANARI.npy" 
+
 full_path = os.path.join(outpath, filename)
+fractions_path = os.path.join(outpath, filename_fractions)
 area_path = os.path.join(outpath, filename_area)
 full_path_jra = os.path.join(outpath_jra, filename_jra)
+OHpcnt_path = os.path.join(outpath, OHpcnt_filename)
+
 os.makedirs(outpath, exist_ok=True)
 np.save(full_path, fraction_gridpoints)
+np.save(fractions_path, agreement_land) 
 np.save(area_path, fraction_area_list)
 np.save(full_path_jra, fraction_gridpoints_jra)
+np.save(OHpcnt_path, OHpcnt)
 
 # Plotting threshold plot
 plt.figure(figsize=(12, 7))
@@ -164,11 +172,11 @@ lon2d, lat2d = np.meshgrid(lons, lats)
 
 # Create figure and axis
 fig = plt.figure(figsize=(14, 7))
+
 ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
 ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree(central_longitude=0))
 
 cmap = mpl_cm.get_cmap('coolwarm', 20)
-
 c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
 ax.coastlines(resolution='50m', linewidth=0.8)
@@ -184,25 +192,30 @@ cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
 cbar.set_label('Fraction of Models Less Than ERA5 trends', fontsize=12)
 
 plt.title('Fraction of ensemble members where trends are less than ERA5 trends (per grid point)', fontsize=16, weight='bold')
-
 plt.tight_layout()
 plt.savefig("/home/users/samuel.sancar/Documents/Heat_Extremes/CSSP_Images/CANARI_agreement.png", dpi = 500)
 plt.show()
 
 plt.figure(figsize=(14, 7))
+
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
+
 cmap = mpl_cm.get_cmap('coolwarm', 20)
-c = ax.pcolormesh(lon2d, lat2d, agreement_land_jra, cmap=cmap, vmin=0, vmax=1, shading='auto')          
+c = ax.pcolormesh(lon2d, lat2d, agreement_land_jra, cmap=cmap, vmin=0, vmax=1, shading='auto')     
+     
 ax.coastlines(resolution='50m', linewidth=0.8)
 ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
 ax.add_feature(cfeature.LAND, facecolor='lightgray')
 ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
+
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.top_labels = False
 gl.right_labels = False
+
 cbar = plt.colorbar(c, ax=ax, orientation='vertical', pad=0.02, aspect=40)
 cbar.set_label('Fraction of Models Less Than JRA-55', fontsize=12)
+
 plt.title('Model Agreement: Fraction of Models Less Than JRA-55 (per grid point)', fontsize=16, weight='bold')
 plt.tight_layout()
 plt.show()

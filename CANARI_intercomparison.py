@@ -15,6 +15,9 @@ import cf_units
 import matplotlib.cm as mpl_cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from matplotlib.colors import ListedColormap, BoundaryNorm
+import matplotlib.colors as mcolors
+from matplotlib import cm
 from Lat_Land_mask_function import lat_land_mask
 from Save_figure_function import save_figure
 
@@ -26,6 +29,19 @@ template = iris.load_cube('template_cube_1deg.nc')
 lat_minimum = -60
 lat_maximum = 90
 
+# Colour bar parameters
+colors = [
+    '#7b3294',  # purple
+    '#c2a5cf',  # lavender
+    '#a6dba0',  # light green
+    '#f7f7f7',  # near white (centre)
+    '#f4a582',  # peach
+    '#d6604d',  # muted red
+    '#b2182b'   # deep red
+]
+
+bounds = [0, 5, 25, 50, 75, 95, 100]
+
 # Load ERA5 agreement plot
 ERA5 = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/CANARI_ERA5_agreement.npy')
 ERA5_area = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/CANARI_ERA5_area.npy')
@@ -35,6 +51,7 @@ outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/'
 # Load ERA5 trends
 datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 era5 = iris.load_cube(f"{datadir}era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc")
+ERA5_OHpcnt = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_OHpcnt_grids_CANARI.npy')
 jradir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 jra55 = iris.load_cube(f"{jradir}jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc")
 
@@ -53,9 +70,12 @@ era5_masked_cube, _ = lat_land_mask(ERA5_regrided.data, -60, 90)
 era5_masked = era5_masked_cube.data
 jra55_masked_cube, _ = lat_land_mask(jra55.data, -60, 90)
 jra55_masked = jra55_masked_cube.data
+
 # Store threshold curves for all models
 all_fraction_gridpoints = []
 fraction_area_list = []
+OHpcnt_list = []
+labels_list = []
 
 # Loop through each model
 for i, (canari_member, fname) in enumerate(CANARI_regridded):
@@ -88,8 +108,11 @@ for i, (canari_member, fname) in enumerate(CANARI_regridded):
         ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
         ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
 
-        cmap = mpl_cm.get_cmap('coolwarm', 20)
-        c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
+        cmap = mcolors.ListedColormap(colors)
+        norm = mcolors.BoundaryNorm(bounds, cmap.N)
+        
+        c = ax.pcolormesh(lon2d, lat2d, agreement_land*100, cmap=cmap, norm=norm,
+                  shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
         ax.coastlines(resolution='50m', linewidth=0.8)
         ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
@@ -101,8 +124,8 @@ for i, (canari_member, fname) in enumerate(CANARI_regridded):
         gl.right_labels = False
 
         cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
-        cbar.set_label(f'Fraction of models with trends less than {fname}', fontsize=11)
-        plt.title(f'Fraction of ensemble members where trends are less than \n {fname} trends (per gridpoint)', fontsize=12, weight='bold')
+        cbar.set_label(f'Percent of HadGEM-MM ensemble member trends less than \n {member}[%]', fontsize=11)
+        plt.title(f'Pseudo-obs: HadGEM3-MM LE member {member}', fontsize=12, weight='bold')
         plt.tight_layout()
         save_figure(plt, f'{fname}', 'Maps')
         plt.show()
@@ -115,6 +138,17 @@ for i, (canari_member, fname) in enumerate(CANARI_regridded):
         100 * np.count_nonzero((agreement_land >= thresh) & ~np.isnan(agreement_land)) / n_gridpoints
         for thresh in thresholds
     ]
+    
+    OHpcnt_gridpoints = 100 * np.count_nonzero((agreement_land >= 1) & ~np.isnan(agreement_land)) / n_gridpoints
+    
+    np.save(outdir + f'{model_name}_agreement.npy', agreement_land)
+    print(f"Model {model_name} has {OHpcnt_gridpoints}% of the globe covered by grid points where it's trend is greater than 100% of models.")
+    
+    all_fraction_gridpoints.append((fname, fraction_gridpoints))
+    OHpcnt_list.append((fname, OHpcnt_gridpoints))
+    
+    if OHpcnt_gridpoints >= ERA5_OHpcnt:
+        labels_list.append(fname)
     
     full = 100 * np.count_nonzero((agreement_land >= 1) & ~np.isnan(agreement_land)) / n_gridpoints
     number = np.count_nonzero((agreement_land >= 1) & ~np.isnan(agreement_land))
@@ -186,6 +220,50 @@ plt.ylabel('Percentage of Land Grid Points (%)')
 plt.title('Model Agreement Curves for ERA5 and SST Models')
 plt.grid(True)
 plt.legend(loc='best', fontsize='small')
+plt.tight_layout()
+plt.show()
+
+
+OHpcnt_values = [val for _, val in OHpcnt_list]  
+
+OHpcnt_array = np.array(OHpcnt_values, dtype=float)
+ERA5_OHpcnt = float(ERA5_OHpcnt)  
+
+# Calculate ERA5 percentile
+era5_percentile = (np.sum(OHpcnt_array < ERA5_OHpcnt)) / len(OHpcnt_array) * 100
+print(f"ERA5 is in the {era5_percentile:.2f} percentile of model members for fraction of grid points where it has the greatest trend")
+
+
+plt.style.use('ggplot')
+
+fig, ax = plt.subplots(figsize=(7, 7))
+
+# Boxplot with custom colours
+bp = ax.boxplot(
+    OHpcnt_array,
+    patch_artist=True,
+    boxprops=dict(facecolor='#4682B4', alpha=0.85, edgecolor='white', linewidth=2),
+    whiskerprops=dict(color='black', linewidth=2),
+    capprops=dict(color='black', linewidth=2),
+    medianprops=dict(color='black', linewidth=2)
+)
+ax.scatter([1] * len(OHpcnt_array), OHpcnt_array, color = 'blue', alpha = 0.5, marker = 'o')
+
+# Scatter point for ERA5
+ax.scatter(1, ERA5_OHpcnt, color='#D7263D', edgecolor='#D7263D', alpha=1, s=100, label='ERA5', marker='x')
+
+# Labels and title
+ax.set_xlabel('', fontsize=15, fontweight='bold')
+ax.set_ylabel('Percentage of Grid Points with Greatest Trend (%)', fontsize=15, fontweight='bold')
+ax.set_title('Boxplot of % of Grid Points with Greatest Trend', fontsize=18, fontweight='bold')
+
+# Ticks and grid
+ax.tick_params(axis='both', labelsize=13)
+ax.grid(True, linestyle='--', alpha=0.5, linewidth=1.2)
+
+# Legend
+ax.legend(fontsize=13, loc='upper right', frameon=True)
+
 plt.tight_layout()
 plt.show()
 
