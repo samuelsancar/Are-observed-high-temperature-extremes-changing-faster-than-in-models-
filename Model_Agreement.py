@@ -1,7 +1,7 @@
 import iris
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.special
+import cf_units
 import os
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -62,15 +62,46 @@ for i in np.arange(0, 101, 1):
 thresholds = np.arange(0, 1.01, 0.01)
 fraction_gridpoints = []
 fraction_gridpoints_jra = []
+fraction_area_list = []
 
 for thresh in thresholds:
     grid_points = (agreement_land >= thresh) & (~np.isnan(agreement_land))
     grid_points_jra = (agreement_land_jra >= thresh) & (~np.isnan(agreement_land_jra))
     k = np.count_nonzero(grid_points)
     k_jra = np.count_nonzero(grid_points_jra)
+    
     # Use n_gridpoints from ERA5 mask for consistency
     fraction_gridpoints.append(100 * k / n_gridpoints)
     fraction_gridpoints_jra.append(100 * k_jra / n_gridpoints_jra)
+    
+    cube_masked = agreement_masked_cube.copy()
+    cube_masked.data = grid_points.astype(int)  
+
+    if not cube_masked.coord('latitude').has_bounds():
+        cube_masked.coord('latitude').guess_bounds()
+    if not cube_masked.coord('longitude').has_bounds():
+        cube_masked.coord('longitude').guess_bounds()
+    
+    # Fix units if missing or unknown
+    if cube_masked.coord('latitude').units.is_unknown():
+        cube_masked.coord('latitude').units = cf_units.Unit('degrees')
+    if cube_masked.coord('longitude').units.is_unknown():
+        cube_masked.coord('longitude').units = cf_units.Unit('degrees')
+
+    area_weights = iris.analysis.cartography.area_weights(cube_masked)
+
+    area = cube_masked.collapsed(['latitude', 'longitude'], iris.analysis.SUM, weights=area_weights).data
+    
+    # Convert to percentage of total area
+    total_area = np.sum(area_weights)
+    fraction_area_list.append(100 * area / total_area)
+
+# Full gridpoints
+OHpcnt_grid_points = (agreement_land >= 1) & (~np.isnan(agreement_land))
+OHpcnt_k = np.count_nonzero(OHpcnt_grid_points)
+OHpcnt_fraction_gridpoints = 100 * k / n_gridpoints
+ 
+print(f'ERA5 covers {OHpcnt_fraction_gridpoints}% of the globe where it has greater trends than all other model_members')
 
 # 1:1 line
 y = -np.arange(0, 101, 1) + 100
@@ -83,13 +114,25 @@ xerr = [lower_errors, upper_errors]
 # Save model agreement
 outpath = "/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/"
 outpath_jra = "/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/"
+
+file = "ERA5_HighResMIP_agreement.npy"
 filename = "ERA5_agreement.npy"
-filename_jra = "JRA55_agreement.npy"    
+filename_area = "ERA5_MIP_area"
+filename_jra = "JRA55_agreement.npy"
+OHpcnt_filename = "ERA5_OHpcnt_grids"   
+ 
+path = os.path.join(outpath, file) 
 full_path = os.path.join(outpath, filename)
+area_path = os.path.join(outpath, filename_area)
 full_path_jra = os.path.join(outpath_jra, filename_jra)
+OHpcnt_path = os.path.join(outpath, OHpcnt_filename)
+
 os.makedirs(outpath, exist_ok=True)
+np.save(path, agreement_land)
 np.save(full_path, fraction_gridpoints)
+np.save(area_path, fraction_area_list)
 np.save(full_path_jra, fraction_gridpoints_jra)
+np.save(OHpcnt_path, OHpcnt_fraction_gridpoints)
 
 # Plotting threshold plot
 plt.figure(figsize=(12, 7))
@@ -99,6 +142,19 @@ plt.errorbar(thresholds * 100, fraction_gridpoints, xerr=xerr, fmt='.',
 plt.errorbar(thresholds * 100, fraction_gridpoints_jra, xerr=xerr, fmt='.',
              color='darkgreen', ecolor='lightgreen', elinewidth=2, capsize=5,
              label='Model Agreement with JRA-55')
+plt.plot(thresholds * 100, y, linestyle='--', color='gray', linewidth=2, label='1:1 Line')
+plt.xlabel('Percentage of Models Less Than ERA5 and JRA-55 at Grid Point (%)', fontsize=14, weight='bold')
+plt.ylabel('Percentage of Land Grid Points (%)', fontsize=14, weight='bold')
+plt.title('Model Agreement with ERA5 Across Land Grid Points', fontsize=16, weight='bold')
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.legend(fontsize=12)
+plt.tight_layout()
+plt.show()
+
+# Plotting threshold plot
+plt.figure(figsize=(12, 7))
+plt.errorbar(thresholds * 100, fraction_area_list,
+             label='Model Agreement')
 plt.plot(thresholds * 100, y, linestyle='--', color='gray', linewidth=2, label='1:1 Line')
 plt.xlabel('Percentage of Models Less Than ERA5 and JRA-55 at Grid Point (%)', fontsize=14, weight='bold')
 plt.ylabel('Percentage of Land Grid Points (%)', fontsize=14, weight='bold')

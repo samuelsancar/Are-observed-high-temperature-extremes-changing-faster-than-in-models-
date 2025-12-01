@@ -17,7 +17,6 @@ import cf_units
 from Trend_calculation_function import calculate_trend
 from ERA5_trend_calc import maskp87p5
 
-# Set data variables
 Mode = sys.argv[1]
 Group = sys.argv[2]
 model = sys.argv[3]
@@ -26,14 +25,12 @@ member = sys.argv[5]
 t1 = 1958
 t2 = 2023
 
-# Define data file paths
 datadir = '/data/users/samuel.sancar/Heat_extremes/Tailwidthslist/'
 outtrend = f'/data/users/samuel.sancar/Heat_extremes/Trends/{Mode}_model_trends/'
 outtailwidth = '/data/users/samuel.sancar/Heat_extremes/Tail_widths/'
 
 os.makedirs(outtrend, exist_ok=True)
 
-# Helper function to slice safely
 def slice_spatial(cube, year):
     coords_available = [coord.name() for coord in cube.coords()]
     print(f"Year {year} coords: {coords_available}")  # Debug
@@ -43,7 +40,7 @@ def slice_spatial(cube, year):
     elif cube.coords('grid_latitude') and cube.coords('grid_longitude'):
         return cube.slices(['grid_latitude', 'grid_longitude']).next()
     else:
-        print(f"⚠ Skipping year {year}: missing longitude or latitude")
+        print(f"Skipping year {year}: missing longitude or latitude")
         return None
 
 # Collect cubes and track missing years
@@ -77,11 +74,11 @@ for y in range(t1, t2):
     else:
         missing_p87p5_years.append(y)
 
-# Report missing years
+# Missing years
 if missing_tailwidth_years:
-    print(f"\n⚠ Missing coords in tailwidth files for years: {missing_tailwidth_years}")
+    print(f"\n Missing coords in tailwidth files for years: {missing_tailwidth_years}")
 if missing_p87p5_years:
-    print(f"⚠ Missing coords in p87p5 files for years: {missing_p87p5_years}\n")
+    print(f"Missing coords in p87p5 files for years: {missing_p87p5_years}\n")
 
 # Build time coordinates from processed years
 time_unit = cf_units.Unit('days since 1970-01-01', calendar='gregorian')

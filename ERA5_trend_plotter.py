@@ -5,6 +5,13 @@ Plot trend in tail width calculated by ERA5_tailwidth.py
 To run: python plot_tailwidth_trend.py [1958] [2023] [fdr|p]
 """
 
+"""
+17/07/25
+---------
+Plot trend in tail width calculated by ERA5_tailwidth.py
+To run: python plot_tailwidth_trend.py [1958] [2023] [fdr|p]
+"""
+
 import iris
 import sys
 import os
@@ -16,21 +23,20 @@ import matplotlib.cm as mpl_cm
 import numpy as np
 import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
-from Save_figure_function import save_figure
 from ERA5_MKtest_Bootstrap import significance_plot
 
 # Define colour map
 cmap_rb = mpl_cm.get_cmap('coolwarm', 15)
 
-# Input parameters
 reanalysis = 'era5'
 variable = 'daily_maximum_2m_temperature'
 t1 = 1958
 t2 = 2023
-sig = sys.argv[1]  
+sig = sys.argv[1] # either 'fdr' or 'pvals'
 alpha = float(sys.argv[2])
 lat_minimum = -60
 lat_maximum = int(sys.argv[3])
+
 
 # Load trend data
 datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
@@ -38,22 +44,16 @@ trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-
 p87p5_trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_p87p5_trends_{t1}-{t2}.nc")
 template = iris.load_cube('template_cube_1deg.nc')
 
-# Apply latitude and land mask
+# Apply latitude and land mask using function
 model_mask, _ = lat_land_mask(trend, lat_minimum, lat_maximum)
 p87p5_masked, _ = lat_land_mask(p87p5_trend, lat_minimum, lat_maximum)
 
-# Extract grid point locations
+# Extract grid point locations for stippling
 lon = template.coord('longitude').points
 lat = template.coord('latitude').points
 lon2d, lat2d = np.meshgrid(lon, lat)
 
-# Negative p87p5 trend locations
-neg_indices = np.where(p87p5_masked.data < 0)
-neg_lats = lat2d[neg_indices]
-neg_lons = lon2d[neg_indices]
-
-# Load significance mask
-
+# Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
     statsig = xr.DataArray(
         data=np.load(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_{t1}-{t2}.npy"),
@@ -62,27 +62,21 @@ if sig == 'fdr':
         name="significance_mask"
     )
     stipple_lats, stipple_lons = lat2d[statsig], lon2d[statsig]
-
-elif sig == 'pvals':
+else:
     statsig_ds, _, _ = significance_plot(lat_minimum, lat_maximum)
     statsig = statsig_ds[0]
     sig_mask_np = statsig_ds < alpha
     stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
-elif sig == 'bootstrap':
-    _, statsig_ds, _, _ = significance_plot(lat_minimum, lat_maximum, alpha)
-    statsig = statsig_ds[0]
-    sig_mask_np = statsig_ds < alpha
-    stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
+neg_indices = np.where(p87p5_masked.data < 0)
+neg_lats = lat2d[neg_indices]
+neg_lons = lon2d[neg_indices]
 
 fig = plt.figure(figsize=(12, 6))
 ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
 ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
 
 iplt.pcolormesh(model_mask, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
-
-# Overlay white dots where p87p5_trend is negative
-ax.scatter(neg_lons, neg_lats, color='white', s=0.7, alpha=0.5, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
 ax.coastlines(resolution='50m', linewidth=0.5)
 ax.add_feature(cfeature.NaturalEarthFeature(category='cultural', name='admin_0_boundary_lines_land', facecolor='none', scale='50m', edgecolor='0', lw=.05))
@@ -92,7 +86,10 @@ ax.add_feature(cfeature.RIVERS.with_scale('110m'), edgecolor='tab:blue', facecol
 ax.add_feature(cfeature.LAND, facecolor='lightgray')
 ax.add_feature(cfeature.OCEAN, facecolor='white')
 
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.4, alpha=0.5, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
+# Plot stippling
+ax.scatter(stipple_lons, stipple_lats, color='black', s=0.4, alpha=0.3, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
+# Overlay white dots where p87p5_trend is negative
+ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.top_labels = False
@@ -102,70 +99,8 @@ cbar = plt.colorbar(ax.collections[0], orientation='horizontal', pad=0.05, aspec
 cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=12)
 
 plt.title(f"Trend in Tailwidth for ERA5 reanalysis (1958-2023)", fontsize=14, weight='bold')
-plt.tight_layout()
-save_figure(plt, 'ERA5_p_trends', 'Maps')
-plt.show()
-
-# Extract trend data from masked cube
-trend_data = model_mask.data
-
-# Convert significance mask to p-values array
-p_values = np.array(statsig_ds)
-
-# Avoid log(0) by clipping p-values
-p_values = np.clip(p_values, 1e-10, 1)
-
-# Compute significance score
-significance_score = -np.log10(p_values)
-
-# Replace NaNs with zeros
-trend_data = np.nan_to_num(trend_data, nan=0.0)
-significance_score = np.nan_to_num(significance_score, nan=0.0)
-
-# Compute weighted index
-weighted_index = np.abs(trend_data) * significance_score
-
-# Create Iris cube 
-weighted_cube = model_mask.copy()
-if weighted_index.shape != weighted_cube.shape:
-    raise ValueError(f"Shape mismatch: weighted_index {weighted_index.shape} vs weighted_cube {weighted_cube.shape}")
-weighted_cube.data = weighted_index
-
-# Compute colour scale
-try:
-    vmax = np.nanpercentile(weighted_index, 99)
-    if not np.isfinite(vmax):
-        vmax = 1.0
-except Exception:
-    vmax = 1.0
-
-# Plot Weighted Significance-Magnitude Index 
-fig2 = plt.figure(figsize=(12, 6))
-ax2 = plt.axes(projection=ccrs.Robinson(central_longitude=0))
-ax2.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
-
-# Mask weighted index
-weighted_masked, _ = lat_land_mask(weighted_cube, lat_minimum, lat_maximum)
-
-iplt.pcolormesh(weighted_masked, cmap='coolwarm', vmin=0, vmax=vmax)
-
-# Plot stippling 
-if stipple_lons.size > 0 and stipple_lats.size > 0:
-    ax2.scatter(stipple_lons, stipple_lats, color='black', s=0.4, alpha=0.5,
-                transform=ccrs.PlateCarree(), label='Significant')
-
-ax2.coastlines(resolution='50m', linewidth=0.5)
-ax2.add_feature(cfeature.LAND, facecolor='lightgray')
-ax2.add_feature(cfeature.OCEAN, facecolor='white')
-
-# Colourbar
-cbar2 = plt.colorbar(ax2.collections[0], orientation='horizontal', pad=0.05, aspect=50)
-cbar2.set_label('Weighted Significance-Magnitude Index', fontsize=12)
-
-plt.title(f"Weighted Significance-Magnitude Index for \n ERA5 tailwidth trends", fontsize=14, weight='bold')
 
 plt.tight_layout()
-save_figure(plt, 'ERA5_tailwidth_trends_weighted_index', 'Maps')
 plt.show()
 
 
