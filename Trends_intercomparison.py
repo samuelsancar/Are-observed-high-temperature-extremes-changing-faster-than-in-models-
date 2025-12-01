@@ -15,6 +15,9 @@ import glob
 import matplotlib.cm as mpl_cm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from matplotlib.colors import ListedColormap, BoundaryNorm
+import matplotlib.colors as mcolors
+from matplotlib import cm
 from Lat_Land_mask_function import lat_land_mask
 from Save_figure_function import save_figure
 
@@ -23,6 +26,20 @@ template = iris.load_cube('template_cube_1deg.nc')
 
 lat_minimum = -60
 lat_maximum = 90
+
+# Colour bar parameters
+
+colors = [
+    '#7b3294',  # purple
+    '#c2a5cf',  # lavender
+    '#a6dba0',  # light green
+    '#f7f7f7',  # near white (centre)
+    '#f4a582',  # peach
+    '#d6604d',  # muted red
+    '#b2182b'   # deep red
+]
+
+bounds = [0, 5, 25, 50, 75, 95, 100]
 
 # Load ERA5 agreement plot
 ERA5 = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_agreement.npy')
@@ -86,6 +103,45 @@ for i, (coupled, fname) in enumerate(coupled_regridded):
     lats = template.coord('latitude').points
     lons = template.coord('longitude').points
     lon2d, lat2d = np.meshgrid(lons, lats)
+
+    if model_name == 'CNRM-CM6-1_r3i1p1f2':
+        
+        # Plot individual map
+        fig = plt.figure(figsize=(12, 6))
+        ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+        ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
+
+        cmap = mcolors.ListedColormap(colors)
+        norm = mcolors.BoundaryNorm(bounds, cmap.N)
+        
+        c = ax.pcolormesh(lon2d, lat2d, agreement_land*100, cmap=cmap, norm=norm,
+                  shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
+
+        ax.coastlines(resolution='50m', linewidth=0.8)
+        ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
+        ax.add_feature(cfeature.LAND, facecolor='lightgray')
+        ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = False
+        gl.right_labels = False
+
+        cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50, ticks=bounds)
+        cbar.set_label(f'Percent of HighResMIP member trends less than pseudo-obs trends[%]', fontsize=11)
+        plt.title(f'Pseudo-obs: \n CNRM-CM6-1 hghresSST-present r3i1p1f2 trends (per gridpoint)', fontsize=12, weight='bold')
+        plt.tight_layout()
+        save_figure(plt, 'CNRM-CM6-1_trend_intercomparison', 'Maps')
+        plt.show()
+        
+        # Histogram for ERA5 agreement
+        plt.figure(figsize=(10, 6))
+        plt.hist(fraction_gridpoints, bins=5, color='steelblue', edgecolor='black', alpha=0.7)
+        plt.xlabel('Percentage of Models Less Than Member (%)', fontsize=14, weight='bold')
+        plt.ylabel('Percentage of Land Grid Points (%)', fontsize=14, weight='bold')
+        plt.title('Histogram of Model Agreement with\n HadGEM3-GC31-HM_r1i2p1f1', fontsize=16, weight='bold')
+        plt.grid(axis='y', linestyle='--', alpha=0.6)
+        plt.tight_layout()
+        plt.show()
 
     # Calculate threshold curve
     thresholds = np.arange(0, 1.01, 0.01)
@@ -177,15 +233,18 @@ for j, (sst, fname) in enumerate(sst_regridded):
     lons = template.coord('longitude').points
     lon2d, lat2d = np.meshgrid(lons, lats)
 
-    if model_name == 'HadGEM3-GC31-HM_r1i2p1f1':
+    if model_name == 'NICAM16-8S_r1i1p1f1':
         
         # Plot individual map
         fig = plt.figure(figsize=(12, 6))
         ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
         ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
 
-        cmap = mpl_cm.get_cmap('coolwarm', 20)
-        c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=1, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
+        cmap = mcolors.ListedColormap(colors)
+        norm = mcolors.BoundaryNorm(bounds, cmap.N)
+        
+        c = ax.pcolormesh(lon2d, lat2d, agreement_land*100, cmap=cmap, norm=norm,
+                  shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
         ax.coastlines(resolution='50m', linewidth=0.8)
         ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
@@ -196,11 +255,11 @@ for j, (sst, fname) in enumerate(sst_regridded):
         gl.top_labels = False
         gl.right_labels = False
 
-        cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
-        cbar.set_label(f'Fraction of models with trends less than a) ERA5, b) HadGEM3-GC31-HM highresSST-present r1i2p1f1', fontsize=11)
-        plt.title(f'Fraction of ensemble members where trends are less than \n HadGEM3-GC31-HM highresSST-present r1i2p1f1 trends (per gridpoint)', fontsize=12, weight='bold')
+        cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50, ticks=bounds)
+        cbar.set_label(f'Percent of HighResMIP member trends less than pseudo-obs trends[%]', fontsize=11)
+        plt.title(f'Pseudo-obs: \n NICAM-8S hghresSST-present r1i1p1f1 trends (per gridpoint)', fontsize=12, weight='bold')
         plt.tight_layout()
-        save_figure(plt, 'HadGEM-GC31-HM_SST_trend_intercomparison', 'Maps')
+        save_figure(plt, 'NICAM16-8S_trend_intercomparison', 'Maps')
         plt.show()
         
         # Histogram for ERA5 agreement

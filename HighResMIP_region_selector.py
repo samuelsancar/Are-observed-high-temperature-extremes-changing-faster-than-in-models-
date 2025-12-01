@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from matplotlib import cm
+import matplotlib.colors as mcolors
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import iris.analysis
 import sys
 import glob
@@ -57,6 +60,7 @@ def pass_conditions(member1):
     combined_conditions = condition_1 & condition_2 & condition_3
     trend_copy = member1_trend.copy()
     trend_copy.data = np.ma.masked_where(~combined_conditions, member1_trend.data)
+    plot = np.ma.masked_where(~combined_conditions, member1_trend.data)
     masked_area = trend_copy.collapsed(['latitude', 'longitude'], iris.analysis.SUM, weights=area_weights).data
     number_of_gridpoints = np.sum(combined_conditions)
     condition_count = condition_1.astype(int) + condition_2.astype(int) + condition_3.astype(int)
@@ -64,7 +68,7 @@ def pass_conditions(member1):
     _0p9 = np.ma.masked_where(~condition_3, member1_trend.data)
     no_0p9 = np.sum(_0p9)
 
-    return masked_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, no_0p9
+    return masked_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, no_0p9, plot
 
 variable = sys.argv[1]
 
@@ -73,8 +77,10 @@ if variable == 'iterate':
     _90th_percentile = []
     for tag, cube, fname in all_files:
         member_name = os.path.basename(fname).split('_tailwidth')[0]
-        passed_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, no_0p9 = pass_conditions(member_name)
+        passed_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, no_0p9, plot = pass_conditions(member_name)
         print(f'Member {member_name} ({tag}) has {passed_area}metres squared passing all conditions.')
+        if member_name == "EC-Earth3P-HR_highresSST-present_r3i1p1f1":
+            chosen_area = passed_area
         member_passes.append(passed_area)
         _90th_percentile.append(no_0p9)
         
@@ -123,7 +129,8 @@ if variable == 'iterate':
     plt.style.use('ggplot')
     plt.figure(figsize=(12, 7))
     plt.hist(member_passes, bins='auto', edgecolor='black')
-    plt.axvline(x=era5_masked_area, color='#D7263D', linestyle='--', linewidth=2.5, label='ERA5 Value')
+    plt.axvline(x=era5_masked_area, color="#35D726", linestyle='--', linewidth=2.5, label='ERA5 Value')
+    plt.axvline(x=chosen_area, color="#2644D7", linestyle='--', linewidth=2.5, label='EC-Earth3P-HR_\nr1i1p1f1 (AMIP) Value')
     plt.xlabel('Total area to pass all 3 conditions (m2)')
     plt.ylabel('Frequency')
     plt.title('Distribution of Gridpoints Passing All Conditions')
@@ -134,8 +141,11 @@ if variable == 'iterate':
     
 else:
     member1 = variable
+    bounds = [0,1,2,3,4]
+    cmap = cm.get_cmap('viridis', len(bounds)-1)
+    norm = mcolors.BoundaryNorm(bounds, cmap.N)
     
-    passed_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, _ = pass_conditions(member1)
+    passed_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, _, plot = pass_conditions(member1)
      
     print(f'Member {member1} has {number_of_gridpoints} gridpoints that pass all 3 conditions.')
 
@@ -149,24 +159,36 @@ else:
     ax.add_feature(cfeature.BORDERS, linestyle=':')
     ax.set_global()
 
-    mesh = ax.pcolormesh(lons, lats, trend_copy, transform=ccrs.PlateCarree(),
-                        cmap='Reds', shading='auto')
+    mesh = ax.pcolormesh(lons, lats, plot, transform=ccrs.PlateCarree(central_longitude=0),cmap='RdYlBu', shading='auto')
 
     cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05)
     cb.set_label('Tailwidth Trend (°C per decade)')
 
-    plt.title(f'Regions passing conditions for CANARI member {member1}')
+    plt.title(f'Regions passing conditions for HighResMIP member\n {member1}')
     plt.show()
     
+
     plt.figure(figsize=(10, 6))
-    ax = plt.axes(projection=ccrs.Robinson(central_longitude= 0))
+    ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
     ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree(central_longitude=0))
     ax.coastlines()
     ax.add_feature(cfeature.BORDERS, linestyle=':')
 
     lon_grid, lat_grid = np.meshgrid(lons, lats)
 
-    mesh = ax.pcolormesh(lon_grid, lat_grid, condition_count, cmap='viridis', transform=ccrs.PlateCarree(central_longitude=0))
-    plt.colorbar(mesh, orientation='horizontal', label='Number of Conditions Met')
-    plt.title('Conditions Met per Grid Point')
+    mesh = ax.pcolormesh(lon_grid, lat_grid, condition_count,
+                        cmap=cmap, norm=norm,
+                        transform=ccrs.PlateCarree(central_longitude=0))
+
+    cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
+    cb.set_label('Number of conditions true')
+
+    # Compute midpoints for tick positions
+    bounds = [0, 1, 2, 3, 4] 
+    midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
+
+    cb.set_ticks(midpoints)
+    cb.set_ticklabels(['0', '1', '2', '3'])
+
+    plt.title(f'HighResMIP member\n {member1}')
     plt.show()
