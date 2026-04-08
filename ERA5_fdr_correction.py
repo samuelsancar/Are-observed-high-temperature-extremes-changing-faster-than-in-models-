@@ -5,86 +5,82 @@ Plotting false discovery rate corrected P-values for significance stippling for 
 To run: python ERA5_MKstatsig_plot.py [1958] [2023]
 """
 
-import sys
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+import iris
 import matplotlib.cm as mpl_cm
-import xarray as xr
 import numpy as np
 import os
+import sys
 from statsmodels.stats.multitest import fdrcorrection
 from Lat_Land_mask_function import lat_land_mask
+from iris import Constraint
 
-# Colour map
 cmap_rb = mpl_cm.get_cmap('RdBu_r', 15)
 
-# Command-line arguments
+t1 = sys.argv[1]
+lat_minimum = -60
+lat_maximum = 90
+alpha = 0.1
+
 reanalysis = 'era5'
 variable = 'daily_maximum_2m_temperature'
-t1 = 1958
-t2 = 2023
-lat_minimum = -60
-lat_maximum = int(sys.argv[1])
-alpha = float(sys.argv[2])
+dir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+Stat_sig_name = f"{dir}{reanalysis}_{variable}_tailwidth_p_{t1}-2023.nc"
+Mk_tau_name = f"{dir}{reanalysis}_{variable}_tailwidth_mktau_{t1}-2023.nc"
 
-datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
-Stat_sig = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_p_{t1}-{t2}.nc")
-pvals = Stat_sig["P-values"].values
+def _var_or_name(name):
+    return Constraint(cube_func=lambda c: (getattr(c, 'var_name', None) == name) or (c.name() == name))
 
-# Apply lat_land_mask before FDR correction
-masked_cube, no_of_gridpoints = lat_land_mask(pvals, lat_minimum, lat_maximum)
-masked_data = masked_cube.data
+# Load p-value cube
+Stat_sig = iris.load_cube(Stat_sig_name, _var_or_name('Tailwidth_trend_p-values'))
+pvals = Stat_sig.data
+    
+# Number of valid gridpoints
+_, no_of_gridpoints = lat_land_mask(pvals, lat_minimum, lat_maximum)
 
 # Flatten valid values and apply FDR correction
-valid_mask = np.isfinite(masked_data)
-pvals_flat = masked_data[valid_mask]
-rejected, corrected_pvals = fdrcorrection(pvals_flat, alpha)
+valid_mask = np.isfinite(pvals)
+pvals_flat = pvals[valid_mask]
+rejected, corrected_pvals = fdrcorrection(pvals_flat, alpha=0.1)
 
 # Create full mask with rejected values
-rejected_mask_full = np.full(masked_data.shape, False)
+rejected_mask_full = np.full(pvals.shape, False)
 rejected_mask_full[valid_mask] = rejected
 number_of_rejected = np.sum(rejected)
 
 print(f"Number of significant grid points after FDR correction: {number_of_rejected} out of {no_of_gridpoints} valid grid points")
 
-# Extract stippling coordinates
-latitudes = masked_cube.coord('latitude').points
-longitudes = masked_cube.coord('longitude').points
+# Extract stippling coordinates for plot
+latitudes = Stat_sig.coord('latitude').points
+longitudes = Stat_sig.coord('longitude').points
 lon2d, lat2d = np.meshgrid(longitudes, latitudes)
 stipple_lats, stipple_lons = lat2d[rejected_mask_full], lon2d[rejected_mask_full]
 
-# Save significance mask to file
-outpath = "/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends"
-outdir_pos = "/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/"
-
-filename = f"{reanalysis}_{variable}_tailwidth_fdr_{t1}-{t2}.npy"
-np.save(os.path.join(outpath, filename), rejected_mask_full)
+# Save all FDR significant trends
+fdr_cube = Stat_sig.copy()
+fdr_cube.data = rejected_mask_full.astype(np.int8)
+fdr_cube.long_name = 'fdr corrected trends'
+fdr_cube.var_name = 'fdr_corrected_trends'
+fdr_cube.units = '1'
+fdr_cube.attributes = {}
+filename = f"{reanalysis}_{variable}_tailwidth_fdr_all_{t1}-2023.nc"
+iris.save(fdr_cube, os.path.join(dir, filename))
+print(f"Saved all-trend FDR mask: {np.sum(rejected)} significant points")
 
 # Save FDR significant positive trends
-tau_data = xr.open_dataset(f"{datadir}{reanalysis}_{variable}_tailwidth_mktau_1958-2023.nc")
-tau_vals = tau_data["P-values"].values
+tau_cube = iris.load_cube(Mk_tau_name)
+tau_vals = tau_cube.data
 tau_masked = tau_vals[valid_mask]
-pos_mask = np.full(masked_data.shape, False)
+
+pos_mask = np.full(pvals.shape, False)
 pos_mask[valid_mask] = np.logical_and(rejected, tau_masked > 0)
-filename_pos = f"{reanalysis}_{variable}_tailwidth_fdr_positive_{t1}-{t2}.npy"
-np.save(os.path.join(outdir_pos, filename_pos), pos_mask)
+
+pos_fdr_cube = Stat_sig.copy()
+pos_fdr_cube.data = pos_mask.astype(np.int8)
+pos_fdr_cube.long_name = 'fdr corrected positive trends'
+pos_fdr_cube.var_name = 'fdr_corrected_positive_trends'
+pos_fdr_cube.units = '1'
+pos_fdr_cube.attributes = {}
+filename_pos = f"{reanalysis}_{variable}_tailwidth_fdr_positive_{t1}-2023.nc"
+iris.save(pos_fdr_cube, os.path.join(dir, filename_pos))
 print(f"Saved positive-trend FDR mask: {np.sum(pos_mask)} significant points")
-
-fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.PlateCarree())
-ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
-
-ax.scatter(stipple_lons, stipple_lats, color='green', s=0.5, alpha=0.5, transform=ccrs.PlateCarree(), label='Stippling')
-ax.coastlines(resolution='50m', linewidth=1)
-ax.add_feature(cfeature.LAND, facecolor='white')
-ax.add_feature(cfeature.OCEAN, facecolor='white')
-
-gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-gl.top_labels = False
-gl.right_labels = False
-
-plt.title(f"Significant tailwidth trends after FDR correction ($alpha$ < 0.1) for ERA5 reanalysis (1958-2022)", fontsize=14, weight='bold')
-plt.tight_layout()
-plt.show()
 

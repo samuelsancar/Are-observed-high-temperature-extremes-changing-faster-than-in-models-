@@ -6,6 +6,7 @@ import cartopy.feature as cfeature
 from matplotlib import cm
 import matplotlib.colors as mcolors
 from matplotlib.colors import ListedColormap, BoundaryNorm
+from Lat_Land_mask_function import lat_land_mask
 import iris.analysis
 import sys
 import glob
@@ -36,7 +37,7 @@ def pass_conditions(member1):
     basename2 = member1.split('_')[2]
     basename = f'{basename1}_{basename2}'
     member1_agreement = np.load(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_agreement/{basename}_agreement.npy')
-
+    member1_trend_masked, _ = lat_land_mask(member1_trend, -60, 90)
     member1_array = member1_trend.data.astype(float)
     member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/P-vals/{member1}_tailwidths_p_1958.nc')
 
@@ -44,31 +45,28 @@ def pass_conditions(member1):
     condition_2 = member1_array > 0
     condition_3 = member1_agreement >= 0.9
     
-    if not member1_trend.coord('latitude').has_bounds():
-        member1_trend.coord('latitude').guess_bounds()
-    if not member1_trend.coord('longitude').has_bounds():
-        member1_trend.coord('longitude').guess_bounds()
+    if not member1_trend_masked.coord('latitude').has_bounds():
+        member1_trend_masked.coord('latitude').guess_bounds()
+    if not member1_trend_masked.coord('longitude').has_bounds():
+        member1_trend_masked.coord('longitude').guess_bounds()
     
     # Fix units if missing or unknown
-    if member1_trend.coord('latitude').units.is_unknown():
-        member1_trend.coord('latitude').units = cf_units.Unit('degrees')
-    if member1_trend.coord('longitude').units.is_unknown():
-        member1_trend.coord('longitude').units = cf_units.Unit('degrees')
+    if member1_trend_masked.coord('latitude').units.is_unknown():
+        member1_trend_masked.coord('latitude').units = cf_units.Unit('degrees')
+    if member1_trend_masked.coord('longitude').units.is_unknown():
+        member1_trend_masked.coord('longitude').units = cf_units.Unit('degrees')
 
-    area_weights = iris.analysis.cartography.area_weights(member1_trend)
+    area_weights = iris.analysis.cartography.area_weights(member1_trend_masked)
     
-    combined_conditions = condition_1 & condition_2 & condition_3
-    trend_copy = member1_trend.copy()
-    trend_copy.data = np.ma.masked_where(~combined_conditions, member1_trend.data)
-    plot = np.ma.masked_where(~combined_conditions, member1_trend.data)
-    masked_area = trend_copy.collapsed(['latitude', 'longitude'], iris.analysis.SUM, weights=area_weights).data
+    combined_conditions = condition_1 & condition_2 & condition_3 
+    masked_area = np.sum(area_weights[combined_conditions])
     number_of_gridpoints = np.sum(combined_conditions)
     condition_count = condition_1.astype(int) + condition_2.astype(int) + condition_3.astype(int)
     
-    _0p9 = np.ma.masked_where(~condition_3, member1_trend.data)
+    _0p9 = np.ma.masked_where(~condition_3, member1_trend_masked.data)
     no_0p9 = np.sum(_0p9)
 
-    return masked_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, no_0p9, plot
+    return masked_area, combined_conditions, number_of_gridpoints, member1_trend, condition_count, no_0p9
 
 variable = sys.argv[1]
 
@@ -77,7 +75,7 @@ if variable == 'iterate':
     _90th_percentile = []
     for tag, cube, fname in all_files:
         member_name = os.path.basename(fname).split('_tailwidth')[0]
-        passed_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, no_0p9, plot = pass_conditions(member_name)
+        passed_area, combined_conditions, number_of_gridpoints, member1_trend, condition_count, no_0p9 = pass_conditions(member_name)
         print(f'Member {member_name} ({tag}) has {passed_area}metres squared passing all conditions.')
         if member_name == "EC-Earth3P-HR_highresSST-present_r3i1p1f1":
             chosen_area = passed_area
@@ -85,36 +83,34 @@ if variable == 'iterate':
         _90th_percentile.append(no_0p9)
         
     era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
+    era5_masked, _ = lat_land_mask(era5, -60, 90)
     era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_1958-2023.nc')
     era5_agreement = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_HighResMIP_agreement.npy')
-    era5_array = era5.data.astype(float)
+    era5_array = era5_masked.data.astype(float)
 
     era5_condition_1 =  era5_sig.data < 0.05
     era5_condition_2 =  era5_array > 0 
     era5_condition_3 =  era5_agreement >= 0.9
     
-    if not era5.coord('latitude').has_bounds():
-        era5.coord('latitude').guess_bounds()
-    if not era5.coord('longitude').has_bounds():
-        era5.coord('longitude').guess_bounds()
+    if not era5_masked.coord('latitude').has_bounds():
+        era5_masked.coord('latitude').guess_bounds()
+    if not era5_masked.coord('longitude').has_bounds():
+        era5_masked.coord('longitude').guess_bounds()
     
     # Fix units if missing or unknown
-    if era5.coord('latitude').units.is_unknown():
-        era5.coord('latitude').units = cf_units.Unit('degrees')
-    if era5.coord('longitude').units.is_unknown():
-        era5.coord('longitude').units = cf_units.Unit('degrees')
+    if era5_masked.coord('latitude').units.is_unknown():
+        era5_masked.coord('latitude').units = cf_units.Unit('degrees')
+    if era5_masked.coord('longitude').units.is_unknown():
+        era5_masked.coord('longitude').units = cf_units.Unit('degrees')
 
-    era5_area_weights = iris.analysis.cartography.area_weights(era5)
+    era5_area_weights = iris.analysis.cartography.area_weights(era5_masked)
     
     era5_combined_conditions = era5_condition_1 & era5_condition_2 & era5_condition_3
-    era5_copy = era5.copy()
-    era5_copy.data = np.ma.masked_where(~era5_combined_conditions, era5.data)
-    era5_masked_area = era5_copy.collapsed(['latitude', 'longitude'], iris.analysis.SUM, weights=era5_area_weights).data
-      
-    era5_masked_data = np.ma.masked_where(~era5_combined_conditions, era5.data)
+    era5_masked_area = np.sum(era5_area_weights[era5_combined_conditions])
+
     era5_number_of_gridpoints = np.sum(era5_combined_conditions)
     
-    era5_0p9 = np.ma.masked_where(~era5_condition_3, era5.data)
+    era5_0p9 = np.ma.masked_where(~era5_condition_3, era5_masked.data)
     era5_no_0p9 = np.sum(era5_0p9)
     
     members_array = np.array(member_passes)
@@ -145,7 +141,7 @@ else:
     cmap = cm.get_cmap('viridis', len(bounds)-1)
     norm = mcolors.BoundaryNorm(bounds, cmap.N)
     
-    passed_area, combined_conditions, number_of_gridpoints, member1_trend, trend_copy, condition_count, _, plot = pass_conditions(member1)
+    passed_area, combined_conditions, number_of_gridpoints, member1_trend, condition_count, _ = pass_conditions(member1)
      
     print(f'Member {member1} has {number_of_gridpoints} gridpoints that pass all 3 conditions.')
 
@@ -159,7 +155,7 @@ else:
     ax.add_feature(cfeature.BORDERS, linestyle=':')
     ax.set_global()
 
-    mesh = ax.pcolormesh(lons, lats, plot, transform=ccrs.PlateCarree(central_longitude=0),cmap='RdYlBu', shading='auto')
+    mesh = ax.pcolormesh(lons, lats, transform=ccrs.PlateCarree(central_longitude=0),cmap='RdYlBu', shading='auto')
 
     cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05)
     cb.set_label('Tailwidth Trend (°C per decade)')

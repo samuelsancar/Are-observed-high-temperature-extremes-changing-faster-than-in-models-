@@ -27,10 +27,11 @@ from Save_figure_function import save_figure
 cmap_rb = mpl_cm.get_cmap('coolwarm', 15)
 
 member = sys.argv[1]
+sig = sys.argv[2]
 
 # Load trends data
 datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/'
-filename = f"{member}_tailwidth_trend.nc"
+filename = f"{member}_tailwidth_trend_1958-2023.nc"
 cube = iris.load_cube(datadir + filename)
 p87p5_trend = iris.load_cube(datadir + filename.replace('tailwidth','p87p5'))
 
@@ -49,11 +50,17 @@ neg_lats = lat2d[neg_indices]
 neg_lons = lon2d[neg_indices]
 
 # Load significance mask (already masked for land and latitude)
-sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/'
-statsig_ds = xr.open_dataset(f"{sig_datadir}{member}_tailwidths_p_1958.nc")
-statsig = list(statsig_ds.data_vars.values())[0]
-sig_mask_np = statsig.values < 0.05
-stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
+if sig == 'fdr':
+    sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/FDR_corrections_All/'
+    statsig = iris.load_cube(f"{sig_datadir}{member}_tailwidths_p_1958_fdr_significant_all.nc")
+    statsig_bool =  statsig.data.astype(bool)
+    stipple_lats, stipple_lons = lat2d[statsig_bool], lon2d[statsig_bool]
+else:
+    sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/'
+    statsig_ds = xr.open_dataset(f"{sig_datadir}{member}_tailwidths_p_1958.nc")
+    statsig = list(statsig_ds.data_vars.values())[0]
+    sig_mask_np = statsig.values < 0.05
+    stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
 # Create figure and axis
 fig = plt.figure(figsize=(12, 6))

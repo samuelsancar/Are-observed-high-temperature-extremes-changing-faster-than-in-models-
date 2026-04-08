@@ -13,36 +13,29 @@ import cf_units
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.cm as mpl_cm
-from BnD_error_function import binomial_uncertainty
+from Unused_code.BnD_error_function import binomial_uncertainty
 from Lat_Land_mask_function import lat_land_mask
 
 # Load template
 template = iris.load_cube('template_cube_1deg.nc')
 
 # Load model trends
-CANARI_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend.nc')
-
-# Regrid model trends
-CANARI_regridded = [cube.regrid(template, iris.analysis.Linear()) for cube in CANARI_files]
+CANARI_files = iris.load('/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend_1958-2023.nc')
 
 # Load and regrid ERA5 trends
 era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
-ERA5_OHpcnt = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/ERA5_OHpcnt_grids_CANARI.npy')
-era5_regridded = era5.regrid(template, iris.analysis.Linear())
-
 jra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc')
-#jra_regridded = jra.regrid(template, iris.analysis.Linear())
 
 # Apply mask to ERA5 data 
-era5_masked_cube, _ = lat_land_mask(era5_regridded.data, -60, 90)
-era5_masked = era5_masked_cube.data
+##era5_masked_cube, _ = lat_land_mask(era5, -60, 90)
+era5_masked = era5.data
 
-jra_masked_cube, _ = lat_land_mask(jra.data, -60, 90)
-jra_masked = jra_masked_cube.data
+#jra_masked_cube, _ = lat_land_mask(jra, -60, 90)
+jra_masked = jra.data
 
 # Stack all models into a 3D array (n_models, lat, lon)
-CANARI_regridded_include_jra =  CANARI_regridded # + [jra_masked_cube] (include or not?)
-CANARI_regridded_include_era5 = CANARI_regridded # + [era5_masked_cube] (include or not?)
+CANARI_regridded_include_jra =  CANARI_files # + [jra_masked_cube] (include or not?)
+CANARI_regridded_include_era5 = CANARI_files # + [era5_masked_cube] (include or not?)
 
 model_stack_include_jra = np.concatenate([np.array([cube.data for cube in CANARI_regridded_include_jra])], axis=0)
 model_stack_include_era5 = np.concatenate([np.array([cube.data for cube in CANARI_regridded_include_era5])], axis=0)

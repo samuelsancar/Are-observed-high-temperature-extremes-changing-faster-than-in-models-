@@ -31,16 +31,16 @@ lat_maximum = 90
 
 # Colour bar parameters
 colors = [
-    '#7b3294',  # purple
-    '#c2a5cf',  # lavender
-    '#a6dba0',  # light green
-    '#f7f7f7',  # near white (centre)
-    '#f4a582',  # peach
-    '#d6604d',  # muted red
-    '#b2182b'   # deep red
+    '#7b3294',  
+    '#c2a5cf',  
+    '#a6dba0', 
+    '#f7f7f7',  
+    '#f4a582', 
+    '#d6604d',  
+    '#b2182b'   
 ]
 
-bounds = [0, 5, 25, 50, 75, 95, 100]
+bounds = [0, 5, 25, 50, 75, 90, 100]
 
 # Load ERA5 agreement plot
 ERA5 = np.load('/home/users/samuel.sancar/Documents/Heat_Extremes/Model_agreement/CANARI_ERA5_agreement.npy')
@@ -56,20 +56,16 @@ jradir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 jra55 = iris.load_cube(f"{jradir}jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc")
 
 # Get list of filenames
-CANARI_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend.nc'))
+CANARI_filenames = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend_1958-2023.nc'))
 
 # Load cubes and pair with filenames
 CANARI_files = [(iris.load_cube(fname), fname) for fname in CANARI_filenames]
 
-CANARI_regridded = [(cube.regrid(template, iris.analysis.Linear()), fname) for cube, fname in CANARI_files]
-ERA5_regrided = era5.regrid(template, iris.analysis.Linear())
-#JRA55_regridded = jra55.regrid(template, iris.analysis.Linear())
-
 # Apply mask to ERA5 data 
-era5_masked_cube, _ = lat_land_mask(ERA5_regrided.data, -60, 90)
-era5_masked = era5_masked_cube.data
-jra55_masked_cube, _ = lat_land_mask(jra55.data, -60, 90)
-jra55_masked = jra55_masked_cube.data
+#era5_masked_cube, _ = lat_land_mask(era5.data, -60, 90)
+era5_masked = era5.data
+#jra55_masked_cube, _ = lat_land_mask(jra55.data, -60, 90)
+jra55_masked = jra55.data
 
 # Store threshold curves for all models
 all_fraction_gridpoints = []
@@ -78,11 +74,11 @@ OHpcnt_list = []
 labels_list = []
 
 # Loop through each model
-for i, (canari_member, fname) in enumerate(CANARI_regridded):
-    indices = [j for j in range(len(CANARI_regridded)) if j != i]
+for i, (canari_member, fname) in enumerate(CANARI_files):
+    indices = [j for j in range(len(CANARI_files)) if j != i]
     model_stack = np.concatenate(
-        [np.array([CANARI_regridded[j][0].data for j in indices]),
-         ERA5_regrided.data[np.newaxis, :, :]],  axis=0) # model_stack = np.concatenate([np.array([CANARI_regridded[j][0].data for j in indices]),ERA5_regrided.data[np.newaxis, :, :]], axis=0), JRA55_regridded.data[np.newaxis, :, :]
+        [np.array([CANARI_files[j][0].data for j in indices]),
+         era5.data[np.newaxis, :, :]],  axis=0) # model_stack = np.concatenate([np.array([CANARI_files[j][0].data for j in indices]),era5.data[np.newaxis, :, :]], axis=0), JRA55_regridded.data[np.newaxis, :, :]
 
     agreement = np.mean(model_stack <= canari_member.data, axis=0)
     agreement_land_cube, n_gridpoints = lat_land_mask(agreement, -60, 90)
@@ -154,8 +150,6 @@ for i, (canari_member, fname) in enumerate(CANARI_regridded):
     number = np.count_nonzero((agreement_land >= 1) & ~np.isnan(agreement_land))
     print(f"Model {model_name} has {full}% of the globe ({number} grid points) covered by grid points where it's trend is greater than 100% of models.")
     
-    all_fraction_gridpoints.append((fname, fraction_gridpoints))
-    
     fraction_area = []
     
     for thresh in thresholds:
@@ -223,7 +217,6 @@ plt.legend(loc='best', fontsize='small')
 plt.tight_layout()
 plt.show()
 
-
 OHpcnt_values = [val for _, val in OHpcnt_list]  
 
 OHpcnt_array = np.array(OHpcnt_values, dtype=float)
@@ -232,7 +225,6 @@ ERA5_OHpcnt = float(ERA5_OHpcnt)
 # Calculate ERA5 percentile
 era5_percentile = (np.sum(OHpcnt_array < ERA5_OHpcnt)) / len(OHpcnt_array) * 100
 print(f"ERA5 is in the {era5_percentile:.2f} percentile of model members for fraction of grid points where it has the greatest trend")
-
 
 plt.style.use('ggplot')
 

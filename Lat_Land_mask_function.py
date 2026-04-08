@@ -1,9 +1,8 @@
 """
-    Function to apply land and latitude mask to 2D iris cubes or 3D iris cubes/lists. Latitude mask can be chosen.
+    Function to apply land and latitude mask to 2D iris cubes or 3D iris cubes/lists. Boundaries of latitude mask can be chosen.
     Function also applies mask for trends where the 87.5th quantile is decreasing.
 
     Returns masked_cube, no_of_gridpoints
-
 """
 
 import numpy as np
@@ -21,7 +20,7 @@ def lat_land_mask(model, min_threshold, max_threshold):
     land_mask = np.squeeze(lsm_regridded.data) > 0.5
 
     latitudes = template.coord('latitude').points
-    latitudes = np.array(latitudes, dtype=np.float64)  # Force float64 explicitly
+    latitudes = np.array(latitudes, dtype=np.float64)  
     lat_mask = (latitudes >= float(min_threshold)) & (latitudes <= float(max_threshold))
     lat_mask_2d = np.repeat(lat_mask[:, np.newaxis], land_mask.shape[1], axis=1)
 
@@ -58,10 +57,7 @@ def lat_land_mask(model, min_threshold, max_threshold):
     return masked_cube, no_of_gridpoints
 
 def ThreeD_lat_land_mask(model, min_threshold, max_threshold):
-    import iris
-    import numpy as np
 
-    # Load template and land-sea mask
     template = iris.load_cube('template_cube_1deg.nc')
     lsm = iris.load_cube('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')
     lsm_regridded = lsm.regrid(template, iris.analysis.Nearest())
@@ -71,7 +67,7 @@ def ThreeD_lat_land_mask(model, min_threshold, max_threshold):
 
     # Create latitude mask
     latitudes = template.coord('latitude').points
-    latitudes = np.array(latitudes, dtype=np.float64)  # Force float64 explicitly
+    latitudes = np.array(latitudes, dtype=np.float64)  
     min_threshold = float(min_threshold)
     max_threshold = float(max_threshold)
     lat_mask = (latitudes >= min_threshold) & (latitudes <= max_threshold)
@@ -107,18 +103,12 @@ def ThreeD_lat_land_mask(model, min_threshold, max_threshold):
         standard_name='longitude',
         units='degrees'
     )
-
-    # Wrap masked data into an Iris cube
-    masked_cube = iris.cube.Cube(
-        masked_data.astype(np.float32),
+    masked_cube = iris.cube.Cube(masked_data.astype(np.float32),
         dim_coords_and_dims=[
             (time_coord, 0),
             (lat_coord, 1),
             (lon_coord, 2)
-        ],
-        long_name='tail_width_trend_masked',
-        units=units,
-        attributes=attributes
+        ], long_name='tail_width_trend_masked', units=units, attributes=attributes
     )
 
     return masked_cube, no_of_gridpoints

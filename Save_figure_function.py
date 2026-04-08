@@ -10,5 +10,5 @@ def save_figure(plt, filename, location):
     os.makedirs(folder, exist_ok=True)  
     full_path = os.path.join(folder, f"{filename}.png")  
 
-    plt.savefig(full_path, dpi=500, format='png')
+    plt.savefig(full_path, dpi=1000, format='png')
     print(f"Figure saved to: {full_path}")

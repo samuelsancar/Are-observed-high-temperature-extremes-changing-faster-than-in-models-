@@ -13,12 +13,9 @@ import matplotlib.cm as mpl_cm
 import numpy as np
 import xarray as xr
 from matplotlib.patches import Rectangle
-import iris.analysis as ia
-import iris.analysis.cartography as iac
-from iris.coord_categorisation import add_year
-import warnings
-import datetime
-import matplotlib.dates as mdates
+from Region_average_Function import regional_tailwidths, MIP_regional_tailwidths
+from Trend_calculation_functions import regional_trends
+from MK_functions import regional_mann_kendall_test
 
 # Custom functions
 sys.path.append('/home/users/samuel.sancar/Heat_Extremes/Code/Functions/')
@@ -113,36 +110,6 @@ plt.tight_layout()
 save_figure(plt, f'{member}', 'Maps')
 plt.show()
 
-def get_area_weights(cube):
-    """
-    Compute area weights for a cube, ensuring latitude and longitude bounds exist.
-    """
-    for coord in ['latitude', 'longitude']:
-        if not cube.coord(coord).has_bounds():
-            cube.coord(coord).guess_bounds()
-    return iac.area_weights(cube)
-
-
-def areaMean(cube):
-    """
-    Compute weighted area mean for a cube, ignoring NaNs and masked values.
-    """
-    
-    cube.data = np.ma.masked_invalid(cube.data)
-    
-    collapse_dims = [dim for dim in ['latitude', 'longitude'] if dim in [coord.name() for coord in cube.coords()]]
-
-    if collapse_dims:
-        # Compute weights
-        weights = get_area_weights(cube)
-      
-        if np.ma.is_masked(cube.data):
-            weights = np.ma.masked_where(cube.data.mask, weights)
-
-        cube = cube.collapsed(collapse_dims, ia.MEAN, weights=weights)
-
-    return cube
-
 # Land-sea mask
 lsm = xr.open_dataset('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')['lsm'].squeeze()
 
@@ -151,29 +118,36 @@ n_regions = len(regtitles)
 
 plt.style.use('ggplot')
 
-fig, axes = plt.subplots(n_regions, 2, figsize=(14, 4 * n_regions), sharex='col')
-years = np.arange(1958, 2023)
+# Wide horizontal layout: 2 rows (top: lines, bottom: boxplots), columns = regions
+# IMPORTANT: do NOT share x across rows (boxplots shouldn't use "years" scale)
+fig, axes = plt.subplots(
+    2, n_regions,
+    figsize=(4 * n_regions + 4, 8),   # tweak width/height to taste
+    sharex=False, sharey=False
+)
 
-positions = [1, 2, 3, 4]
-labels = ['HighResMIP', 'JRA-55', 'ERA5', 'Pseudo Obs']
+years = np.arange(1958, 2023)
+positions = [1, 2, 3]
+labels = ['HighResMIP', 'ERA5', 'JRA-55']
 member_cubes = all_files
 
 all_trends = []
+region_pvals = []
 
 for i, region_name in enumerate(regtitles):
-    ax_line = axes[i, 0]
-    ax_box = axes[i, 1]
+    ax_line = axes[0, i]   # top row: line plots
+    ax_box  = axes[1, i]   # bottom row: boxplots
 
     # Reanalysis regional averages
-    jra55_region = jra55.intersection(latitude=reglats[i], longitude=reglons[i])
-    era5_region = era5.intersection(latitude=reglats[i], longitude=reglons[i])
-    jra55_avg = areaMean(jra55_region)
-    era5_avg = areaMean(era5_region)
+    era5_series  = regional_tailwidths('era5',  reglats[i], reglons[i]) 
+    jra55_series = regional_tailwidths('jra55', reglats[i], reglons[i])
+    era5_trends  = regional_trends(era5_series)
+    jra55_trends = regional_trends(jra55_series)
 
     trend_array = []
     pseudo_obs = None
 
-    # Plot HighResMIP members
+    # Plot HighResMIP members fits
     for _, trend_cube, fname in member_cubes:
         member_name = fname.split('/')[-1].split('_tailwidth_trend.nc')[0]
         lat_points = trend_cube.coord('latitude').points
@@ -181,73 +155,87 @@ for i, region_name in enumerate(regtitles):
         lsm_interp = lsm.interp(latitude=lat_points, longitude=lon_points, method="nearest")
         trend_cube.data = np.ma.masked_where(lsm_interp.values <= 0.5, trend_cube.data)
 
-        region = trend_cube.intersection(latitude=reglats[i], longitude=reglons[i], ignore_bounds=True)
-        avg_trend = areaMean(region)
+        region = MIP_regional_tailwidths(member_name, reglats[i], reglons[i])
+        avg_trend = regional_trends(region)
 
-        if avg_trend.data.size != 0:
-            fit_line = avg_trend.data / 10 * (years - years[0])
-            trend_array.append(avg_trend.data)
-            all_trends.append(avg_trend.data)
+        if avg_trend.size != 0:
+            fit_line = avg_trend / 10 * (years - years[0])
+            trend_array.append(avg_trend)
+            all_trends.append(avg_trend)
 
             if member_name == member:
+                _, p_val = regional_mann_kendall_test(region)
+                region_pvals.append((region_name, np.round(p_val, 3)))
+
+                # Fit line + pseudo-obs aligned series
                 ax_line.plot(years, fit_line, linewidth=2.5, color='red', label=f'{member_name}')
+                mean_fit  = np.nanmean(fit_line)
+                mean_data = np.nanmean(region.data)
+                delta = mean_data - mean_fit
+                ax_line.plot(years, region.data - delta, linewidth=1.0, color='red')
+
                 pseudo_obs = avg_trend
             else:
                 ax_line.plot(years, fit_line, linewidth=0.8, alpha=0.3, color='grey')
 
-    # Plot ERA5/JRA55
-    if jra55_avg.data.size != 0:
-        jra55_line = jra55_avg.data / 10 * (years - years[0])
+    # ERA5/JRA55 lines
+    if jra55_trends.size != 0:
+        jra55_line = jra55_trends / 10 * (years - years[0])
         ax_line.plot(years, jra55_line, linewidth=2.0, color='green', label='JRA-55')
-        all_trends.append(jra55_avg.data)
+        all_trends.append(jra55_trends)
 
-    if era5_avg.data.size != 0:
-        era5_line = era5_avg.data / 10 * (years - years[0])
+    if era5_trends.size != 0:
+        era5_line = era5_trends / 10 * (years - years[0])
         ax_line.plot(years, era5_line, linewidth=2.0, color='orange', label='ERA5')
-        all_trends.append(era5_avg.data)
+        all_trends.append(era5_trends)
 
-    # Line plot styling
-    ax_line.set_title(region_name, fontsize=12, fontweight='bold')
+    # Style line axes
+    
+    # Inside the loop, after plotting for each region:
+    ax_line.set_title(region_name, fontsize=13, fontweight='bold', pad=15)
+
     ax_line.tick_params(axis='both', labelsize=10)
     ax_line.grid(True)
 
-    # Boxplots
+    # --- Boxplots (bottom row) ---
     if len(trend_array) > 0:
-        bp = ax_box.boxplot(trend_array, positions=[1], widths=0.5)     
+        ax_box.boxplot(trend_array, positions=[1], widths=0.6)
 
-    if jra55_avg.data.size > 0:
-        ax_box.scatter(2, jra55_avg.data, 
-                       color='green', marker='x')
-        
-    if era5_avg.data.size > 0:
-        ax_box.scatter(3, era5_avg.data,
-                       color='orange', marker = 'x')
+    # Slightly bigger scatter markers for reference points
+    scatter_size = 60  # increased from typical defaults
+    if jra55_trends.size > 0:
+        ax_box.scatter(3, jra55_trends, color='green', marker='x', s=scatter_size)
+    if era5_trends.size > 0:
+        ax_box.scatter(2, era5_trends, color='orange', marker='x', s=scatter_size)
     if pseudo_obs is not None:
-        ax_box.scatter(4, pseudo_obs.data,
-                       color='red', marker = 'x')
+        # Place pseudo-obs as a separate marker at position 4 (to match label order)
+        ax_box.scatter(1, pseudo_obs, color='red', marker='x', s=scatter_size)
 
     ax_box.set_xticks(positions)
     ax_box.set_xticklabels(labels, fontsize=10, rotation=0)
     ax_box.tick_params(axis='both', labelsize=10)
     ax_box.grid(True)
 
-# Shared x-axis for line plots
-axes[-1, 0].set_xlabel('Year', fontsize=12)
-axes[2, 0].set_ylabel('Average Yearly tailwidth (°C)')
-axes[2, 1].set_ylabel('Average Trend (°C/decade)')
+# --- Column titles centered above each region ---
+fig.canvas.draw() 
 
-# Consistent y-axis for boxplots
-global_ylim = (min(all_trends) - 0.05, max(all_trends) + 0.05)
-for i in range(n_regions):
-    axes[i, 1].set_ylim(global_ylim)
+# Axis labels (left-most column only)
+axes[0, 0].set_ylabel('Average Yearly tailwidth (°C)', fontsize=13)
+axes[1, 0].set_ylabel('Average Trend (°C/decade)', fontsize=13)
 
-# Global legend
+# Global legend from the first line axis
 handles, lbls = axes[0, 0].get_legend_handles_labels()
-fig.legend(handles, ['Pseudo Obs','JRA-55', 'ERA5'], loc='outside upper left', bbox_to_anchor=(0.735, 0.995), ncol=4, fontsize=10)
+fig.legend(handles, ['Pseudo Obs', 'JRA-55', 'ERA5'],
+           loc='upper left', bbox_to_anchor=(0.7, 0.995), ncol=3, fontsize=12)
 
 # Figure title
-fig.suptitle(f'Pseudo obs: {member})', fontsize=12, fontweight='bold')
+fig.suptitle(f'Pseudo observations regional trends:\n{member}', fontsize=15, fontweight='bold')
 
-#plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.savefig(f"Beautiful_Tailwidth_Trends_{member}.png", dpi=300)
-plt.show()
+# Layout and save
+plt.tight_layout(rect=[0, 0.03, 1, 0.93])  # leave space at top for column titles + legend
+plt.savefig(f"HighResMIP_regional_trends_{member}.png", dpi=300)
+# plt.show()
+
+
+
+print(f"Regional Mann-Kendall p-values: {region_pvals}")

@@ -14,7 +14,7 @@ import iris.analysis.stats
 import matplotlib.pyplot as plt
 import iris.plot as iplt
 import iris.quickplot as qplt
-from Trend_calculation_function import calculate_trend
+from Trend_calculation_functions import calculate_trend
 
 # Command-line arguments
 model = sys.argv[1]

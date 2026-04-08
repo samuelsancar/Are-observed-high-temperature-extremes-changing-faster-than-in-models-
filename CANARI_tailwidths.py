@@ -43,7 +43,6 @@ def process_file(file_path):
             tailwidth_cube.add_aux_coord(aux_coord)
             p875_cube.add_aux_coord(aux_coord)
 
-        # Regrid
         tailwidth_cube = tailwidth_cube.regrid(template_cube, iris.analysis.Linear())
         p875_cube = p875_cube.regrid(template_cube, iris.analysis.Linear())
 
@@ -53,7 +52,7 @@ def process_file(file_path):
         return None
 
 # Loop over members
-for member in range(23, 24):
+for member in range(0, 41):
     data_path = f"{base_data_path}/member{member}"
     member_output_dir = os.path.join(output_base_dir, f"member{member}")
     os.makedirs(member_output_dir, exist_ok=True)
@@ -88,24 +87,5 @@ for member in range(23, 24):
         p875_year_path = os.path.join(member_output_dir, f"p875_member{member}_{year}.nc")
         iris.save(tailwidth_cube, tailwidth_year_path)
         iris.save(p875_cube, p875_year_path)
-
-    # Merge cubes for convenience
-    try:
-        merged_tailwidth = iris.cube.CubeList(tailwidth_cubes).concatenate_cube()
-    except iris.exceptions.ConcatenateError:
-        print("[!] Concatenate failed for tailwidth cubes. Saving as CubeList.")
-        merged_tailwidth = iris.cube.CubeList(tailwidth_cubes)
-
-    try:
-        merged_p875 = iris.cube.CubeList(p875_cubes).concatenate_cube()
-    except iris.exceptions.ConcatenateError:
-        print("[!] Concatenate failed for p875 cubes. Saving as CubeList.")
-        merged_p875 = iris.cube.CubeList(p875_cubes)
-
-    # Save merged files
-    tailwidth_path = os.path.join(member_output_dir, f"tailwidth_member{member}_merged.nc")
-    p875_path = os.path.join(member_output_dir, f"p875_member{member}_merged.nc")
-    iris.save(merged_tailwidth, tailwidth_path)
-    iris.save(merged_p875, p875_path)
 
     print(f"Completed for member {member}.\nSaved in {member_output_dir}")

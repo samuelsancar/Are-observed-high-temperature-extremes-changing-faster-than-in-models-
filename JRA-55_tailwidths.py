@@ -1,26 +1,25 @@
 """
+17/09/2025
+----------
 
-Script to calculate tailwidths of daily maximum 2m temperature from JRA-55 reanalysis data.
+Code to download JRA-55 data, aggregate for daily maximum 2m temperature data, and find annual tail-width.
 
-To run: python JRA-55_tailwidths.py
+To run: python JRA55_tasmax.py
 
 """
 
 import iris
-import numpy as np
+import iris.analysis
+import iris.coord_categorisation
 import iris.coord_systems as cs
 import os
 
-datadir = '/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/daily_maximum__2m_temperature/'
-outdir = '/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/Yearly_tailwidths/'
+datadir = '/data/users/samuel.sancar/Climate_models/JRA-55/'
+outdir = '/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/'
 template = iris.load_cube('template_cube_1deg.nc')
-
 reanalysis = 'jra55'
-variable = '_minmax_surf.015_tmax.reg_tl319.'
+variable = 'minmax_surf.015_tmax.reg_tl319.'
 
-os.makedirs(outdir, exist_ok=True)
-
-# Function to match coordinate systems and regrid
 def match_and_regrid(tailwidth, template):
     def assign_default_coord_system(cube):
         default_cs = cs.GeogCS(6371229.0)
@@ -40,24 +39,48 @@ def match_and_regrid(tailwidth, template):
 
     return tailwidth.regrid(template, iris.analysis.Linear())
 
-# Calculate tailwidths over years t1-t2
-for y in np.arange(1958,2023):
+os.makedirs(outdir, exist_ok=True)
 
-    fn = reanalysis+variable+'_'+str(y)+'.nc'
-    year_cubes = iris.load_cube(datadir+fn)
+for y in range(1958, 2023):
+
+    file_pattern = f"{datadir}{variable}{y}*"
+    cube_list = iris.load(file_pattern)
+
+    iris.util.equalise_attributes(cube_list)
+    iris.util.unify_time_units(cube_list)
+
+    merged_cube = cube_list.concatenate_cube()
+
+    # Reshape to daily blocks (8 time steps per day)
+    no_of_days = merged_cube.coord('time').shape[0] // 8
+    merged_cube = merged_cube[:no_of_days * 8]
+
+    # Aggregate to daily maximum
+    iris.coord_categorisation.add_day_of_year(merged_cube, 'time', name='day')
+    daily_cube = merged_cube.aggregated_by('day', iris.analysis.MAX)
 
     #Calculate p99-p87.5 for this year:
-    p99 = year_cubes.collapsed('time',iris.analysis.PERCENTILE,percent=99)
-    p87p5 =year_cubes.collapsed('time',iris.analysis.PERCENTILE,percent=87.5)
+    p99 = daily_cube.collapsed('time',iris.analysis.PERCENTILE,percent=99)
+    p87p5 =daily_cube.collapsed('time',iris.analysis.PERCENTILE,percent=87.5)
     tail_width = p99-p87p5
 
     #regrid onto template:
     tail_width_rg = match_and_regrid(tail_width, template)
+    tail_width_rg.rename('Yearly_tasmax_tailwidth')
     p87p5_regrid = match_and_regrid(p87p5, template)
+    p87p5_regrid.rename('Tamsax_p87p5')
 
     out_file = os.path.join(outdir, f"{reanalysis}_{variable}_{y}_tail_width.nc")
     outfile_87p5 = os.path.join(outdir, f"{reanalysis}_{variable}_{y}_87p5.nc")
     iris.save(tail_width_rg, out_file)
     iris.save(p87p5_regrid, outfile_87p5)
+    
+    print(f'Processed year {y}')
+
+print("Processing complete.")
 
 
+
+
+
+ 
