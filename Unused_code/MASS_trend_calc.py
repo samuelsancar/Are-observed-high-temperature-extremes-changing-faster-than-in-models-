@@ -1,6 +1,5 @@
 """
-    Code to merge tailwidth trends and calculate tailwidth trends for MASS large ensemble
-   
+Code to merge tailwidth trends and calculate tailwidth trends for MASS large ensemble
 """
 
 import iris

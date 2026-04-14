@@ -1,10 +1,14 @@
 """
-
 18/09/2025
+----------
 
-Code to plot JRA-55 tailwidths trends
+Plot trend in tail width calculated by JRA-55_trend_calc.py
 
-To run: python JRA-55_trends_plotter.py
+Note: JRA-55 significant trends are calculated in JRA-55_MKtest.py and saved as netCDF files. These must be calculated first for code to work. 
+These are loaded here to add stippling to the trend map.
+
+To run: 'python JRA-55_trend_plotter.py [fdr|p]' # where fdr or p determines whether to use the 
+FDR-corrected significance mask or the raw p-value mask for stippling.
 
 """
 
@@ -20,21 +24,24 @@ import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
 from Save_figure_function import save_figure
 from Map_features import map_features
-from JRA55_MKtests import significance_plot
 
 # Define colour map
 cmap_rb = mpl_cm.get_cmap('coolwarm', 15)
 
+# Beginning & end year
 t1 = 1958
 t2 = 2023
+
 sig = sys.argv[1] # either 'fdr' or 'pvals'
-alpha = 0.05
+alpha = 0.05 # Test level for significance testing 
+
 lat_minimum = -60
 lat_maximum = 90
 
 reanalysis = 'jra55'
 variable = '_minmax_surf.015_tmax.reg_tl319.'
 datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+
 trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
 p87p5_trend = iris.load_cube(f"{datadir}{reanalysis}_{variable}_p87p5_trends_{t1}-{t2}.nc")
 template = iris.load_cube('template_cube_1deg.nc')
@@ -48,11 +55,6 @@ lon = template.coord('longitude').points
 lat = template.coord('latitude').points
 lon2d, lat2d = np.meshgrid(lon, lat)
 
-# Find indices where p87p5_trend is negative
-neg_indices = np.where(p87p5_masked.data < 0)
-neg_lats = lat2d[neg_indices]
-neg_lons = lon2d[neg_indices]
-
 # Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
     statsig = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_all_{t1}-{t2}.nc")
@@ -63,10 +65,15 @@ else:
     statsig = list(statsig_ds.data_vars.values())[0]
     sig_mask_np = statsig < alpha
     stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
+    
+# Find indices where p87p5_trend is negative
+neg_indices = np.where(p87p5_masked.data < 0)
+neg_lats = lat2d[neg_indices]
+neg_lons = lon2d[neg_indices]
 
 # Plot trends
 fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
 
 map = iplt.pcolormesh(model_mask, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
@@ -76,14 +83,13 @@ ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.6, transfor
 # Overlay white dots where p87p5_trend is negative
 ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
-map_features('Rob', ax, -60, 90)
+map_features('Detail', ax, -60, 90)
 
-#cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
-#cbar.ax.tick_params(labelsize=12)
-#cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
+cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
+cbar.ax.tick_params(labelsize=12)
+cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
 
 plt.title(f"JRA-55", fontsize=17, weight='bold')
-
 plt.tight_layout()
 save_figure(plt, f'JRA-55_taiwidth_trends_({t1}-{t2-1})({sig})', 'Maps')
 plt.show()

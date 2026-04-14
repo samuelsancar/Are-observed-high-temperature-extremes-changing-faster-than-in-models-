@@ -90,7 +90,7 @@ sig_mask_np = statsig_ds.data < 0.05
 stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
 fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
 ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
 
 # Plot tailwidth trend
@@ -132,7 +132,7 @@ map_features('Rob', ax, -60, 90)
 cbar = plt.colorbar(ax.collections[0], orientation='horizontal', pad=0.05, aspect=50)
 cbar.set_label('Trend in Tail width (°C per decade)', fontsize=13)
 
-plt.title(f"CANARI Member {member} Tail width trends (1958–2022)", fontsize=15, weight='bold')
+plt.title(f"CANARI-LE member {member} tail width trends (1958–2022)", fontsize=15, weight='bold')
 plt.tight_layout()
 save_figure(plt, f'CANARI_{member}_tailwidths_p', 'Maps')
 plt.show()
@@ -161,7 +161,7 @@ years = np.arange(1958, 2023)
 #labels    = ['CANARI', 'ERA5', 'JRA-55']
 
 positions = [1,2]
-labels = ['CANARI', 'Reanalyses']
+labels = ['CANARI-LE', 'Reanalyses']
 
 # Load CANARI member cubes
 member_cubes = [(iris.load_cube(fname), fname) for fname in CANARI_files]
@@ -302,7 +302,7 @@ fig.legend(handles, ['ERA5', 'JRA-55', 'Member 29'],
 fig.suptitle('Regional Tailwidth Trends (1958–2022)', fontsize=18, fontweight='bold', y=1.06)
 
 length_str = str(n_regions)
-save_figure(plt, f"CANARI_regional_trends_{member}_{length_str}regions.png", 'Graphs')
+save_figure(plt, f"CANARI_regional_trends_member_{member}.png", 'Graphs')
 plt.show()
 
 print(f"Regional Mann-Kendall p-values: {region_pvals}")

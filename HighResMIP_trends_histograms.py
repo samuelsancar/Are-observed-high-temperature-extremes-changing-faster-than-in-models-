@@ -1,7 +1,7 @@
 """
 17/07/25
 ---------
-Plot histogram in tail widths trends of ERA5 data.
+Plot histogram in tail widths trends of HighResMIP, JRA-55, and ERA5 data.
 To run: python plot_tailwidth_trend.py [1958] [2023]
 
 """
@@ -40,8 +40,8 @@ def units_and_coords(cube):
     return cube
 
 # Command-line arguments
-t1 = int(sys.argv[1])
-t2 = int(sys.argv[2])
+t1 = 1958
+t2 = 2023
 
 reanalysis = 'era5'
 variable = 'daily_maximum_2m_temperature'
@@ -74,16 +74,21 @@ jra_masked = units_and_coords(jra_trend)
 jra_area_weights_2d = iris.analysis.cartography.area_weights(jra_masked)
 jra_area_weights = jra_area_weights_2d.flatten()[valid_jra]
 
-coupled_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend.nc'))
-sst_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend.nc'))
+coupled_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends/Coupled_model_trends/*_tailwidth_trend_{t1}-2022.nc'))
+sst_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends/SST_model_trends/*_tailwidth_trend_{t1}-2022.nc'))
 coupled_data = [iris.load_cube(f) for f in coupled_files]
 sst_data = [iris.load_cube(f) for f in sst_files]
 
-bins = np.arange(-0.5, 1.5, 0.1)
+bins = np.arange(-0.9, 1.2, 0.05)
+
+ntot = 0
 
 # SST and Coupled models 
-plt.figure(figsize=(14, 12))
+plt.figure(figsize=(10, 8))
 for cube in sst_data:
+    
+    ntot = ntot+1
+    
     masked_model, _ = lat_land_mask(cube, -60, 80)
     model_data = masked_model.data.astype(float).flatten()
     valid = ~np.isnan(model_data)
@@ -93,7 +98,30 @@ for cube in sst_data:
     masked = units_and_coords(masked_model)
     area_weights_2d = iris.analysis.cartography.area_weights(masked)
     area_weights = area_weights_2d.flatten()[valid]
-    plt.hist(model_data, bins=bins, weights=area_weights, histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
+
+    if ntot == 1:
+        plt.hist(
+            model_data,
+            bins=bins,
+            weights=area_weights,
+            density=True,
+            alpha = 0.5,
+            range = (-0.9, 1.2),
+            histtype='step',
+            label = 'HRMIP members',
+            edgecolor='red'
+        )
+    else:
+        plt.hist(
+            model_data,
+            bins=bins,
+            weights=area_weights,
+            density=True,
+            alpha = 0.5,
+            range = (-0.9, 1.2),
+            histtype='step',
+            edgecolor='red'
+        )
 
 for cube in coupled_data:
     masked_model, _ = lat_land_mask(cube, -60, 80)
@@ -105,22 +133,35 @@ for cube in coupled_data:
     masked = units_and_coords(masked_model)
     area_weights_2d = iris.analysis.cartography.area_weights(masked)
     area_weights = area_weights_2d.flatten()[valid]
-    plt.hist(model_data, bins=bins, weights=area_weights, histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
 
-plt.hist(era5_data, weights=era5_area_weights, bins=bins, range = (-0.5, 1), histtype='step', color='red', linewidth=2.5, label='ERA5') #, linestyle='-'
-plt.hist(jra_data, weights=jra_area_weights, bins=bins, range = (-0.5, 1.5), histtype='step', color='blue', linewidth=2.5, linestyle='-.', label='JRA-55')
-plt.xlabel('Trend Magnitude (°C per Decade)', fontsize=20, fontweight='bold')
-plt.xticks(fontsize = 15)
-plt.ylabel(f'Area {"m"}^{2}', fontsize=15, fontweight='bold')
-plt.yticks(fontsize = 15)
+    plt.hist(
+        model_data,
+        bins=bins,
+        weights=area_weights,
+        density=True,
+        alpha = 0.5,
+        range = (-0.9, 1.2),
+        histtype='step',
+        edgecolor='red'
+    )
+    
+ax = plt.gca()
+for spine in ax.spines.values():
+    spine.set_linewidth(2)
 
-plt.xlim(-0.6, 1.5)
-
-plt.title('Distribution of ERA5 tail width trends', fontsize=20, fontweight='bold')
-plt.legend(loc='upper right', fontsize=15)
+plt.hist(era5_data, weights=era5_area_weights, bins=bins, range = (-0.9, 1.2), density = True, histtype='step', color='black', linewidth=3, label='ERA5') #, linestyle='-'
+plt.hist(jra_data, weights=jra_area_weights, bins=bins, range = (-0.9, 1.2), density = True, histtype='step', color='black', linewidth=3, linestyle='-.', label='JRA-55')
+plt.xlabel('Tail width trend (°C per Decade)', fontsize=17, fontweight='bold')
+plt.xticks(fontsize = 16)
+plt.ylabel(f'Density', fontsize=17, fontweight='bold')
+plt.yticks(fontsize = 16)
+plt.yscale('log')
+plt.xlim(-0.9, 1.2)
+plt.title('Tail width trend distribution', fontsize=19, fontweight='bold')
+plt.legend(loc='upper right', fontsize=17)
 plt.grid(True, linestyle='--', alpha=0.6)
-#plt.tight_layout()
-#save_figure(plt, 'Trend_magnitude_histogram', 'Graphs')
+plt.tight_layout()
+save_figure(plt, 'Tail_width_trend_densities', 'Graphs')
 plt.show()
 
 era5_percentile = []

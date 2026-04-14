@@ -23,10 +23,8 @@ sys.path.append('/home/users/samuel.sancar/Heat_Extremes/Code/Functions/')
 from Lat_Land_mask_function import lat_land_mask
 from Save_figure_function import save_figure
 
-# Define colour map
 cmap_rb = mpl_cm.get_cmap('coolwarm', 15)
 
-# Command-line arguments
 Mode = sys.argv[1]  # 'Coupled' or 'SST'
 model = sys.argv[2]
 experiment = sys.argv[3]
@@ -68,7 +66,6 @@ significance_score = -np.log10(p_values)
 
 weighted_index = np.abs(trend_data) * significance_score
 
-# Create Iris cube for plotting
 weighted_cube = masked_cube.copy()
 weighted_cube.data = weighted_index
 
@@ -77,7 +74,6 @@ fig2 = plt.figure(figsize=(12, 6))
 ax2 = plt.axes(projection=ccrs.Robinson(central_longitude=0))
 ax2.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
 
-# Plot using Iris
 iplt.pcolormesh(weighted_cube, cmap='coolwarm', vmin=0, vmax=np.nanpercentile(weighted_index, 99))
 
 # Add stippling for significant points (p < 0.05)
@@ -85,18 +81,14 @@ sig_mask_np = p_values < 0.05
 stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 ax2.scatter(stipple_lons, stipple_lats, color='black', s=0.4, alpha=0.5, transform=ccrs.PlateCarree(), label='Significant')
 
-# Map features
 ax2.coastlines(resolution='50m', linewidth=0.5)
 ax2.add_feature(cfeature.LAND, facecolor='lightgray')
 ax2.add_feature(cfeature.OCEAN, facecolor='white')
 
-# Colourbar
 cbar2 = plt.colorbar(ax2.collections[0], orientation='horizontal', pad=0.05, aspect=50)
 cbar2.set_label('Weighted Significance-Magnitude Index', fontsize=12)
 
-# Title
 plt.title(f"Weighted Significance-Magnitude Index\n{model} {experiment} {member}", fontsize=14, weight='bold')
-
 plt.tight_layout()
 save_figure(plt, f'{model}_{experiment}_{member}_weighted_index', 'Maps')
 plt.show()

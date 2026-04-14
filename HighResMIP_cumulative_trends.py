@@ -86,14 +86,14 @@ sst_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends/SS
 coupled_data = [iris.load_cube(f) for f in coupled_files]
 sst_data = [iris.load_cube(f) for f in sst_files]
 
-bins = np.arange(0, 1, 0.025)
+bins = np.arange(0, 1.2, 0.025)
 
 #zero = 0.0
 #bins_neg = np.concatenate((bins[bins < zero], [zero]))     
 #bins = np.concatenate(([zero], bins[bins > zero]))   
  
 # SST and Coupled models 
-plt.figure(figsize=(10, 10))
+plt.figure(figsize=(10, 8))
 
 ntot = 0
 
@@ -114,15 +114,15 @@ for cube in sst_data:
     area_weights = area_weights_2d.flatten()[valid]
     pos_w  = area_weights[model_data > 0]
     neg_w = area_weights[model_data < 0]
-    plt.hist(model_data, bins=bins, weights=(area_weights/10**13), density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red')
+    plt.hist(model_data, bins=bins, weights=area_weights, density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red')#/10**13
     #plt.hist(neg, bins=bins_neg, weights=neg_w, density= True, cumulative = True, histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
     
     if ntot == 1: # To ensure correct labelling
         
-        plt.hist(model_data, bins=bins, weights=(area_weights/10**13), density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red', label='HighResMIP members')
+        plt.hist(model_data, bins=bins, weights=area_weights, density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red', label='HighResMIP members')#/10**13
         
     else:
-        plt.hist(model_data, bins=bins, weights=(area_weights/10**13), density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red')
+        plt.hist(model_data, bins=bins, weights=area_weights, density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red')#/10**13
 
 for cube in coupled_data:
     masked_model, _ = lat_land_mask(cube, -60,80)
@@ -139,22 +139,25 @@ for cube in coupled_data:
     pos_w  = area_weights[model_data > 0]
     neg_w = area_weights[model_data < 0]
     
-    plt.hist(model_data, bins=bins, weights=(area_weights/10**13), density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red')
+    plt.hist(model_data, bins=bins, weights=area_weights, density= False, cumulative=-1, histtype='step', alpha =0.5, edgecolor='red')#/10**13
     #plt.hist(neg, bins=bins_neg, weights=neg_w, density= True, cumulative = True, histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
 
-plt.hist(era5_data, weights=(era5_area_weights/10**13), density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3.5, label='ERA5') #, linestyle='-'
+ax = plt.gca()
+for spine in ax.spines.values():
+    spine.set_linewidth(2)
+    
+plt.hist(era5_data, weights=era5_area_weights, density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3.5, label='ERA5') #, linestyle='-'
+plt.hist(jra_data, weights=jra_area_weights, density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3.5, linestyle='-.', label='JRA-55')#/10**13
 #plt.hist(era5_neg, weights=era5_neg_w, density= True, cumulative = True, bins=bins_neg, range = (-0.5, 0), histtype='step', color='red', linewidth=2.5) #, linestyle='-'
 #plt.hist(jra_neg, weights=jra_neg_w, density= True, cumulative = True, bins=bins_neg, range = (-0.5, 0), histtype='step', color='blue', linewidth=2.5, linestyle='-.')
-plt.hist(jra_data, weights=(jra_area_weights/10**13), density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3.5, linestyle='-.', label='JRA-55')
-plt.xlabel('Tail width trend (°C per Decade)', fontsize=16, fontweight='bold')
-plt.xticks(fontsize = 15)
-plt.ylabel(f'Cumulative area (\u00D710\u00B9\u00B3 m\u00B2)', fontsize=16, fontweight='bold')
-plt.yticks(fontsize = 15)
-
-plt.xlim(0, 1)
-
-plt.title('Tail width trend cumulative area distributions', fontsize=17, fontweight='bold')
-plt.legend(loc='upper right', fontsize=15)
+plt.xlabel('Tail width trend (°C per Decade)', fontsize=18, fontweight='bold')
+plt.xticks(fontsize = 16)
+plt.ylabel(f'Cumulative area (m\u00B2)', fontsize=18, fontweight='bold') #\u00D710\u00B9\u00B3
+plt.yscale('log')
+plt.yticks(fontsize = 16)
+plt.xlim(0, 1.2)
+plt.title('Tail width trend cumulative area distributions', fontsize=20, fontweight='bold')
+plt.legend(loc='upper right', fontsize=18)
 plt.grid(True, linestyle='--', alpha=0.6)
 plt.tight_layout()
 save_figure(plt, 'Tail_width_trend_cumulative_distributions', 'Graphs')

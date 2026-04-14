@@ -1,9 +1,7 @@
 """
 17/07/25
 ---------
-Code to calculate trends in ERA5 daily tasmax tailwidths.
-
-To run: python ERA5_trend_calc [1958] [2023]
+Code to calculate linear trends in ERA5 daily tasmax tailwidths.
 
 """
 
@@ -16,67 +14,58 @@ import iris.util
 from iris.cube import CubeList
 from iris.coords import AuxCoord
 import cf_units
-from Trend_calculation_functions import (create_time_coord, create_year_cube, maskp87p5, load_yearly_cubes, stack_cubes, calculate_trend)
+from Trend_calculation_functions import (add_year_coord, create_time_coord, create_year_cube, maskp87p5, load_yearly_cubes, stack_cubes, calculate_trend)
 
-def add_year_coord(cube, first_year: int):
-    n = cube.shape[0]
-    sim_years = np.arange(first_year, first_year + n, dtype=int)
-
-    # Attach as an AuxCoord along the time dimension
-    time_dim = cube.coord_dims('time')[0]
-    sim_year_aux = AuxCoord(sim_years, long_name='sim_year', units='year')
-    cube.add_aux_coord(sim_year_aux, data_dims=(time_dim,))
-    return cube
-
-def main():
-
-    t1 = 1958 #int(sys.argv[1])
-    t2 = 2023 # int(sys.argv[2])
-    years = np.arange(t1, t2)
+#Beginning & end year
+t1 = 1958 
+t2 = 2023 
     
-    reanalysis = 'era5'
-    variable = 'daily_maximum_2m_temperature'
+years = np.arange(t1, t2)
     
-    datadir = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'
-    outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
-    p87p5 = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'
+reanalysis = 'era5'
+variable = 'daily_maximum_2m_temperature'
     
-    os.makedirs(outdir, exist_ok=True)
+datadir = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'
+outdir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+p87p5 = '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/'
+    
+os.makedirs(outdir, exist_ok=True)
 
-    time_coord = create_time_coord(years)
-    cubes, p87p5_cubes = load_yearly_cubes(datadir, p87p5 , reanalysis, variable, years)
-    data_cube, p87p5_data_cube = stack_cubes(cubes, p87p5_cubes, time_coord)
+time_coord = create_time_coord(years)
+cubes, p87p5_cubes = load_yearly_cubes(datadir, p87p5 , reanalysis, variable, years)
+data_cube, p87p5_cube = stack_cubes(cubes, p87p5_cubes, time_coord)
     
-     # Ensure time coordinate is attached
-    if not data_cube.coords('time'):
-        data_cube.add_dim_coord(time_coord, 0)
-    if not p87p5_data_cube.coords('time'):
-        p87p5_data_cube.add_dim_coord(time_coord, 0)
+# Ensure time coordinate is attached
+if not data_cube.coords('time'):
+    data_cube.add_dim_coord(time_coord, 0)
+if not p87p5_cube.coords('time'):
+        p87p5_cube.add_dim_coord(time_coord, 0)
         
-    data_cube = add_year_coord(data_cube, t1)
-    p87p5_cube = add_year_coord(p87p5_cube, t1)
+data_cube = add_year_coord(data_cube, t1)
+p87p5_cube = add_year_coord(p87p5_cube, t1)
     
-    data_cube.long_name = f'Yealy tail widths ({t1}-2022)'
-    p87p5_cube.long_name = f'Yearly p87p5 ({t1}-2022)'
-        
-    iris.save(data_cube, os.path.join(datadir, f"{reanalysis}_{variable}_tailwidths_{t1}-2022.nc"))
-        
-    year_cube, p87p5_year_cube = create_year_cube(data_cube, p87p5_data_cube, years)
-    trend = calculate_trend(year_cube, data_cube)
-    p87p5_trend = calculate_trend(p87p5_year_cube, p87p5_data_cube)
-    masked_neg_trends = maskp87p5(p87p5_trend, trend)
-    
-    masked_neg_trends.rename('Tail width trends (1958-2022)')
-    p87p5_trend.rename('p87p5 trends (1958-2022)')
-    
-    out_file = os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
-    iris.save(masked_neg_trends, out_file)
-    
-    p87p5_out_file = os.path.join(outdir, f"{reanalysis}_{variable}_p87p5_trends_{t1}-{t2}.nc")
-    iris.save(p87p5_trend, p87p5_out_file)
+data_cube.long_name = f'Yealy tail widths ({t1}-{t2})'
+p87p5_cube.long_name = f'Yearly p87p5 ({t1}-{t2})'
 
-if __name__ == "__main__":
-    main()
+# Save the combined yearly tail width cubes for reference        
+iris.save(data_cube, os.path.join(datadir, f"{reanalysis}_{variable}_tailwidths_{t1}-{t2}.nc"))
+        
+year_cube, p87p5_year_cube = create_year_cube(data_cube, p87p5_cube, years)
+trend = calculate_trend(year_cube, data_cube)
+p87p5_trend = calculate_trend(p87p5_year_cube, p87p5_cube)
+masked_neg_trends = maskp87p5(p87p5_trend, trend)
+    
+masked_neg_trends.rename(f'Tail width trends ({t1}-{t2})')
+p87p5_trend.rename(f'p87p5 trends ({t1}-{t2})')
+    
+# Save the trend cubes    
+out_file = os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2}.nc")
+iris.save(masked_neg_trends, out_file)
+    
+p87p5_out_file = os.path.join(outdir, f"{reanalysis}_{variable}_p87p5_trends_{t1}-{t2}.nc")
+iris.save(p87p5_trend, p87p5_out_file)
+
+
 
 
     

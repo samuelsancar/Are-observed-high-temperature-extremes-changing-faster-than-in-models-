@@ -265,7 +265,7 @@ print(f"Difference in significant area between JRA-55 and ERA5 {difference}")
 
 
 # Histogram for significant area
-plt.figure(figsize=(12, 7))
+plt.figure(figsize=(12, 5))
 counts, bins, patches = plt.hist(
     significant_area,
     bins=10,
@@ -298,7 +298,7 @@ plt.text(
 
 plt.xlabel('Area of significant trends (\u00D710\u00B9\u00B2 m\u00B2)', fontsize=18, fontweight='bold')
 plt.ylabel('Frequency', fontsize=18, fontweight='bold')
-plt.title(f'HighResMIP area distribution of \nsignificant {graph_name} ', fontsize=20, fontweight='bold')
+plt.title(f'HRMIP area distribution of significant {graph_name} ', fontsize=20, fontweight='bold')
 
 plt.xticks(fontsize=15)
 plt.yticks(fontsize=15)

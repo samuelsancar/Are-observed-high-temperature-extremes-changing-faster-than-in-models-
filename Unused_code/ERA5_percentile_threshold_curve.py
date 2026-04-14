@@ -1,5 +1,5 @@
 """ 
-ERA5 percentile distribution.
+ERA5 percentile in distribution.
 """
 
 import iris
@@ -13,7 +13,6 @@ import matplotlib.cm as mpl_cm
 from Unused_code.BnD_error_function import binomial_uncertainty
 from Lat_Land_mask_function import lat_land_mask
 
-# Load template
 template = iris.load_cube('template_cube_1deg.nc')
 
 # Load model trends
@@ -119,36 +118,28 @@ lats = template.coord('latitude').points
 lons = template.coord('longitude').points
 lon2d, lat2d = np.meshgrid(lons, lats)
 
-# Create figure and axis
 fig = plt.figure(figsize=(14, 7))
 ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
 ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree(central_longitude=0))
 
-# Use colormap
 cmap = mpl_cm.get_cmap('coolwarm', 20)
 
 # Plot the data
 c = ax.pcolormesh(lon2d, lat2d, agreement_land, cmap=cmap, vmin=0, vmax=100, shading='auto', transform=ccrs.PlateCarree(central_longitude=0))
 
-# Add refined map features
 ax.coastlines(resolution='50m', linewidth=0.8)
 ax.add_feature(cfeature.BORDERS.with_scale('50m'), linewidth=0.5)
 ax.add_feature(cfeature.LAND, facecolor='lightgray')
 ax.add_feature(cfeature.OCEAN, facecolor='aliceblue')
 
-# Add gridlines with labels
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.top_labels = False
 gl.right_labels = False
 
-# Add colourbar
 cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
 cbar.set_label('Fraction of Models Less Than ERA5 trends', fontsize=12)
 
-# Add title
 plt.title('Fraction of ensemble members where trends are less than ERA5 trends (per grid point)', fontsize=16, weight='bold')
-
-# Final layout adjustments
 plt.tight_layout()
 plt.savefig("/home/users/samuel.sancar/Documents/Heat_Extremes/CSSP_Images/Model_agreement.png", dpi = 500)
 plt.show()

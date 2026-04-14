@@ -31,13 +31,6 @@ trend_mean = trend_mean.filled(np.nan)
 trend_std = trend_std.filled(np.nan)
 clt_error = clt_error.filled(np.nan)
 
-print("=== DEBUG INFO AFTER MASKING ===")
-print(f"trend_array shape: {trend_array.shape}")
-print(f"trend_mean stats: min={np.nanmin(trend_mean):.4f}, max={np.nanmax(trend_mean):.4f}, mean={np.nanmean(trend_mean):.4f}")
-print(f"trend_std stats: min={np.nanmin(trend_std):.4f}, max={np.nanmax(trend_std):.4f}")
-print(f"clt_error stats: min={np.nanmin(clt_error):.4f}, max={np.nanmax(clt_error):.4f}")
-print("===============================")
-
 # Robust trend logic
 robust_trends_final = np.where(
     (trend_mean > 0) & ((trend_mean - clt_error) > 0), trend_mean,

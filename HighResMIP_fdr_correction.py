@@ -26,6 +26,7 @@ Models = sorted(glob.glob(datadir, recursive=True))
 # Output directories
 outdir_all = "/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections_All/"
 outdir_pos = "/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections_PositiveOnly/"
+
 os.makedirs(outdir_all, exist_ok=True)
 os.makedirs(outdir_pos, exist_ok=True)
 

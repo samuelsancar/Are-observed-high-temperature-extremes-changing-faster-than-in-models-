@@ -1,7 +1,9 @@
 """
-    Code to merge yearly netCDF files for models that aren't already so.
+***OLD VERSION***
+
+Code to merge yearly netCDF files for models that aren't already so.
     
-    To run: python merge_yearly_tailwidths.py 
+To run: python merge_yearly_tailwidths.py 
 
 """
 
@@ -41,7 +43,7 @@ for f in yearly_files:
     cube.var_name = "tailwidth"
     cube.standard_name = None  # Remove if inconsistent
     cube.long_name = "Daily Maximum Near-Surface Air Temperature"
-    cube.units = "K"  # Set explicitly if needed
+    cube.units = "K"  
 
     # Remove attributes that may differ
     cube.attributes = {}

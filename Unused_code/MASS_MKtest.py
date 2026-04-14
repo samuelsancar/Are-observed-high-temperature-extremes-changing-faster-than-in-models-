@@ -1,7 +1,6 @@
 """
-    Code to calculate Mann-Kendall trend tests and significant trends of MASS large ensemble.
+    Code to calculate Mann-Kendall trend tests and significant trends of MASS large ensemble. ***OLD VERSION***
 """
-
 
 import iris
 import glob

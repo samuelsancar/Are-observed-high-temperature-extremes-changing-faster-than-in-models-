@@ -50,7 +50,7 @@ significant_gridpoints = []
 
 plt.figure(figsize=(14, 6))
 
-# --- Coupled models ---
+# Coupled models 
 for trend_file, sig_file in zip(coupled_files, coupled_sig_files):
     trend_cube = iris.load_cube(trend_file)
     sig_cube = iris.load_cube(sig_file)
@@ -64,7 +64,6 @@ for trend_file, sig_file in zip(coupled_files, coupled_sig_files):
     model_data = model_data[~np.isnan(model_data)]
     plt.hist(model_data, bins=bins, histtype='stepfilled', alpha=0.2, color='skyblue', edgecolor='black')
 
-    # Ensure bounds for area weights
     if not sig_cube.coord('latitude').has_bounds():
         sig_cube.coord('latitude').guess_bounds()
     if not sig_cube.coord('longitude').has_bounds():
@@ -83,7 +82,7 @@ for trend_file, sig_file in zip(coupled_files, coupled_sig_files):
     significant_area.append(sig_area)
     significant_gridpoints.append(np.count_nonzero(sig_mask))
 
-# --- SST models ---
+# SST models 
 for trend_file, sig_file in zip(sst_files, sst_sig_files):
     trend_cube = iris.load_cube(trend_file)
     sig_cube = iris.load_cube(sig_file)
@@ -113,7 +112,7 @@ for trend_file, sig_file in zip(sst_files, sst_sig_files):
     significant_area.append(sig_area)
     significant_gridpoints.append(np.count_nonzero(sig_mask))
 
-# --- ERA5 and JRA-55 histograms ---
+# ERA5 and JRA-55 histograms 
 plt.hist(era5_data, bins=bins, histtype='step', color='red', linewidth=2.5, linestyle='--', label='ERA5')
 plt.hist(jra_data, bins=bins, histtype='step', color='blue', linewidth=2.5, linestyle='-.', label='JRA-55')
 
@@ -126,7 +125,7 @@ plt.tight_layout()
 save_figure(plt, 'Significant_Tailwidth_Trend_Histogram', 'Graphs')
 plt.show()
 
-# --- Compute ERA5 and JRA-55 area and gridpoints ---
+# Compute ERA5 and JRA-55 area and gridpoints 
 def compute_area_and_gridpoints(cube):
     if not cube.coord('latitude').has_bounds():
         cube.coord('latitude').guess_bounds()

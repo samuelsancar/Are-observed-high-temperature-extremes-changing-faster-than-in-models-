@@ -1,3 +1,11 @@
+"""
+This code tests the distribution of percentiles of observations within model distributions. 
+It generates a set of 'model' distributions and 'observations', 
+calculates the percentile of each observation within its corresponding model distribution, 
+and then plots the fraction of observations that fall above each percentile threshold.
+
+It is was used to test the validity of the percentile threshold curve plot.
+"""
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as scistats

@@ -1,5 +1,8 @@
 """
-    Stack yearly HighResMIP model tailwidths into one file per model
+    Code to stack yearly HighResMIP tailwidths into one file per model member. 
+    Names of Model members are imported from the Model_table.xlsx file.
+    Stacked cubes are saved in the Tail_widths directory, 
+    with one file per model member containing the tail width for each year from 1958-2022.
 """
 
 import iris
@@ -12,23 +15,15 @@ import os
 from iris.coords import AuxCoord
 import sys
 import cf_units
-from Trend_calculation_functions import (create_time_coord, create_year_cube, maskp87p5, stack_cubes, calculate_trend)
+from Trend_calculation_functions import (add_year_coord, create_time_coord, create_year_cube, maskp87p5, stack_cubes, calculate_trend)
 import glob
 import pandas as pd
 
+# Beginning and end years
 t1 = 1958
 t2 = 2023
+
 years = np.arange(int(t1), t2)
-
-def add_year_coord(cube, first_year: int):
-    n = cube.shape[0]
-    sim_years = np.arange(first_year, first_year + n, dtype=int)
-
-    # Attach as an AuxCoord along the time dimension
-    time_dim = cube.coord_dims('time')[0]
-    sim_year_aux = AuxCoord(sim_years, long_name='sim_year', units='year')
-    cube.add_aux_coord(sim_year_aux, data_dims=(time_dim,))
-    return cube
 
 def load_yearly_cubes(datadir, model, expt, member, years):
     
@@ -90,6 +85,7 @@ for row in np.arange(53,63):
     
     p87p5.long_name = f'Yearly p87p5 ({t1}-2022)'
     
+    # Save merged p87p5 cube
     out_file_p87p5 = os.path.join(outtailwidth, f"{model}_{experiment}_{member}_p87p5_1958-2022.nc")
     iris.save(p87p5, out_file_p87p5)
     

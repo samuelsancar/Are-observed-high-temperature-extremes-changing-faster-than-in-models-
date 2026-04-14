@@ -30,10 +30,10 @@ def guess_bounds(cube):
 def pass_conditions(member1):
     
     member1_trend = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_1958-2023.nc')
-    member1_masked, _ = lat_land_mask(member1_trend, -60, 90)
+    member1_masked, _ = lat_land_mask(member1_trend, -60, 80)
     member1_agreement = np.load(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_trend_agreement.npy')
     member1_trend_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_1980-2023.nc')
-    member1_1980_masked, _ = lat_land_mask(member1_trend_1980, -60, 90)
+    member1_1980_masked, _ = lat_land_mask(member1_trend_1980, -60, 80)
     
     #member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/FDR_corrections_All/{member1}_tailwidths_p_1958_fdr_significant_all.nc')
     member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/{member1}_tailwidths_p_1958.nc')
@@ -74,7 +74,7 @@ variable = sys.argv[1]
 
 if variable == 'iterate':
     member_passes = []
-    _90th_percentile = []
+    _80th_percentile = []
     for i in range(1, 41): 
         
         member1_masked, passed_area, combined_conditions, number_of_gridpoints, condition_count, no_0p9 = pass_conditions(i)
@@ -84,26 +84,26 @@ if variable == 'iterate':
         if i == 29:
             chosen_area = passed_area
         member_passes.append(passed_area)
-        _90th_percentile.append(no_0p9)
+        _80th_percentile.append(no_0p9)
 
     member_passes_array = np.array(member_passes)
     era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
-    era5_masked, _ = lat_land_mask(era5, -60, 90)       
+    era5_masked, _ = lat_land_mask(era5, -60, 80)       
     #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_all_1958-2023.nc')
     era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_1958-2023.nc')
 
     era5_agreement = np.load('/home/users/samuel.sancar/Documents/Temperature_extremes/Model_agreement/CANARI_ERA5_gridpoint_fractions.npy')
     era5_1980 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1980-2023.nc')
-    era5_1980_masked, _ = lat_land_mask(era5_1980, -60, 90)
+    era5_1980_masked, _ = lat_land_mask(era5_1980, -60, 80)
     era5_1980_array = era5_1980_masked.data.astype(float)
     era5_array = era5_masked.data.astype(float)
     
     merra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/MERRA_daily_maximum_2m_temperature_tailwidth_trends_1980-2023.nc')
     jra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc')
     jra_1980 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1980-2023.nc')
-    merra, _= lat_land_mask(merra, -60, 90)
-    jra, _ = lat_land_mask(jra, -60, 90)
-    jra_1980, _ = lat_land_mask(jra_1980, -60, 90)
+    merra, _= lat_land_mask(merra, -60, 80)
+    jra, _ = lat_land_mask(jra, -60, 80)
+    jra_1980, _ = lat_land_mask(jra_1980, -60, 80)
     
     
     era5_masked = guess_bounds(era5_masked)
@@ -145,9 +145,9 @@ if variable == 'iterate':
     
     print(f'ERA5 has {era5_masked_area} metres squared, {era5_number_of_gridpoints} gridpoints, that passed all three conditions. It is in the {np.round(era5_percentile, 1)} % of the model members spread for number of grid points that passed all three conditions.')
     print(f'Member 29 is in the {np.round(member_percentile, 1)} % of the model members spread for number of grid points that passed all three conditions.')
-    #_90th_array = np.array(_90th_percentile)
-    #era5_90th_percentile = (np.sum(_90th_array < era5_no_0p9)) / (len(_90th_array)) * 100
-    #print(f'ERA5 has {era5_90th_percentile} gridpoints where it has trends greater than the 90% of models. It is in the {np.round(era5_90th_percentile)} % of the model members spread for number of grid points that passed all three conditions.')
+    #_80th_array = np.array(_80th_percentile)
+    #era5_80th_percentile = (np.sum(_80th_array < era5_no_0p9)) / (len(_80th_array)) * 100
+    #print(f'ERA5 has {era5_80th_percentile} gridpoints where it has trends greater than the 80% of models. It is in the {np.round(era5_80th_percentile)} % of the model members spread for number of grid points that passed all three conditions.')
      
     #plt.style.use('ggplot')
     plt.figure(figsize=(12, 6))
@@ -156,17 +156,21 @@ if variable == 'iterate':
     alpha=0.85,
     edgecolor='white',
     linewidth=2
-, label='CANARI LE members')
+    , label='CANARI LE members')
     
+    ax = plt.gca()
+    for spine in ax.spines.values():
+        spine.set_linewidth(2)
+
     plt.axvline(x=era5_masked_area, color='black', linestyle='-', linewidth=2.5, label='ERA5')
     plt.axvline(x=chosen_area, color='#d55e00', linestyle='-', linewidth=2.5, label='Member 29')
-    plt.xlabel('Total area to pass all 4 conditions (\u00D710\u00B9\u00B2 m\u00B2)', fontsize=18)
-    plt.ylabel('Frequency', fontsize=18)
-    plt.xticks(fontsize=17)
-    plt.yticks(fontsize=17)
-    plt.title('Distribution of area passing all conditions', fontsize=19, fontweight='bold')
+    plt.xlabel('Total area to pass all 4 conditions (\u00D710\u00B9\u00B2 m\u00B2)', fontsize=21)
+    plt.ylabel('Frequency', fontsize=21)
+    plt.xticks(fontsize=19)
+    plt.yticks(fontsize=19)
+    plt.title('Distribution of area passing all conditions', fontsize=22, fontweight='bold')
     plt.grid(True, linestyle='--', alpha=0.5, linewidth=1.2)
-    plt.legend(fontsize=15)
+    plt.legend(fontsize=19)
     plt.tight_layout()
     save_figure(plt, f'CANARI_Histogram_region_selection', 'Graphs')
     plt.show()
@@ -181,13 +185,13 @@ else:
     if member1 =='era5':
         
         era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
-        era5_masked, _ = lat_land_mask(era5, -60, 90)       
+        era5_masked, _ = lat_land_mask(era5, -60, 80)       
         #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_all_1958-2023.nc')
         era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_1958-2023.nc')
 
         era5_agreement = np.load('/home/users/samuel.sancar/Documents/Temperature_extremes/Model_agreement/CANARI_ERA5_gridpoint_fractions.npy')
         era5_1980 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1980-2023.nc')
-        era5_1980_masked, _ = lat_land_mask(era5_1980, -60, 90)
+        era5_1980_masked, _ = lat_land_mask(era5_1980, -60, 80)
         era5_masked = guess_bounds(era5_masked)
         
         # Ensure a "valid data" mask from the primary cube
@@ -210,7 +214,7 @@ else:
         plt.figure(figsize=(12,6))
         #ax = plt.axes(projection=ccrs.Robinson(central_longitude= 0))
         ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
-        ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree(central_longitude=0))
+        ax.set_extent([-180, 180, -60, 80], crs=ccrs.PlateCarree(central_longitude=0))
         
         for spine in ax.spines.values():
             spine.set_linewidth(3)   
@@ -255,7 +259,7 @@ else:
             spine.set_linewidth(3)  
             spine.set_edgecolor('black')
     
-        ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree(central_longitude=0))
+        ax.set_extent([-180, 180, -60, 80], crs=ccrs.PlateCarree(central_longitude=0))
         ax.coastlines()
         ax.add_feature(cfeature.LAND, facecolor='lightgray')
         ax.add_feature(cfeature.OCEAN, facecolor='white', zorder = 3)
@@ -266,15 +270,15 @@ else:
                             cmap=cmap, norm=norm,
                             transform=ccrs.PlateCarree(central_longitude=0))
 
-        #cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
-        #cb.set_label('Number of conditions true', fontsize=13)
+        cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
+        cb.set_label('Number of conditions true', fontsize=16)
 
         # Compute midpoints for tick positions
-        #midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
+        midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
 
-        #cb.set_ticks(midpoints)
-        #cb.ax.tick_params(labelsize=12)
-        #cb.set_ticklabels(['0', '1', '2', '3', '4'])
-        plt.title(f'CANARI large ensemble member {member1}', fontsize=18, fontweight='bold')
+        cb.set_ticks(midpoints)
+        cb.ax.tick_params(labelsize=15)
+        cb.set_ticklabels(['0', '1', '2', '3', '4'])
+        plt.title(f'CANARI-LE member {member1}', fontsize=18, fontweight='bold')
         save_figure(plt, f'CANARI_member_{member1}_region_selection', 'Maps')
         plt.show()

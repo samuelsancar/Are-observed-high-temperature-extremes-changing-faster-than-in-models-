@@ -1,6 +1,5 @@
 """
     Code to plot large ensemble tailwidth trends
-    
 """
 
 import iris

@@ -1,6 +1,6 @@
 """
-02/07/25
-
+02/07/25 ***OLD VERSION*** (use HighResMIP_tailwidths.py instead)
+--------
 Calculate tailwidths of models from 1958-2022 for Coupled models (combine historical and future runs)
 
 To run: python Model_trend_plotter.py [model file] [model] [experiment] [member]

@@ -1,10 +1,14 @@
 """
+20/07/25
+--------
 
-02/07/25
+Plot HighResMIP trend in tail widths calculated by HighResMIP_trend_calc.py.
 
-Plot land_trends in tail width calculated by Model_trends.py using Iris.
+Note: HighResMIP significant trends are calculated in HighResMIP_MKtest.py and saved as netCDF files. These must be calculated first for code to work. 
+These are loaded here to add stippling to the trend map.
 
-To run: python Model_trend_plotter.py [model] [experiment] [member]
+To run: 'python HighResMIP_trend_plotter.py [Mode] [model [experiment] [member] [sig] [fdr|p]' # where fdr or p determines whether to use the 
+FDR-corrected significance mask or the raw p-value mask for stippling.
 
 """
 
@@ -34,6 +38,11 @@ experiment = sys.argv[3]
 member = sys.argv[4]
 sig = sys.argv[5]  # 'fdr' or 'p'
 
+if experiment=='hist-1950':
+    exp = 'Coupled'
+else:
+    exp = 'SST forced'
+
 # Load trends data
 datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/{Mode}_model_trends/'
 filename = f"{model}_{experiment}_{member}_tailwidth_trend_1958-2022.nc"
@@ -49,11 +58,6 @@ lon = cube.coord('longitude').points
 lat = cube.coord('latitude').points
 lon2d, lat2d = np.meshgrid(lon, lat)
 
-# Find indices where p87p5_trend is negative
-neg_indices = np.where(p87p5_masked.data < 0)
-neg_lats = lat2d[neg_indices]
-neg_lons = lon2d[neg_indices]
-
 # Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
     sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections_All/'
@@ -67,41 +71,43 @@ else:
     sig_mask_np = statsig.values < 0.05
     stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
+# Find indices where p87p5_trend is negative
+neg_indices = np.where(p87p5_masked.data < 0)
+neg_lats = lat2d[neg_indices]
+neg_lons = lon2d[neg_indices]
+
 # Create figure and axis
 fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
+ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
 
 iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
 # Overlay white dots where p87p5_trend is negative
 ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
-# Plot stippling
+# Plot significant trends
 ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.6, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
 
-map_features('Rob', ax, -60, 90)
+map_features('Detail', ax, -60, 90)
 
-#cbar = plt.colorbar(ax.collections[0], orientation='horizontal', pad=0.05, aspect=50)
-#cbar.ax.tick_params(labelsize=12)
-#cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
-
-if experiment=='hist-1950':
-    exp = 'Coupled'
-else:
-    exp = 'SST forced'
+cbar = plt.colorbar(ax.collections[0], orientation='horizontal', pad=0.05, aspect=50)
+cbar.ax.tick_params(labelsize=12)
+cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
     
 plt.title(f"{model} {exp} {member}", fontsize=17, weight='bold')
-
 plt.tight_layout()
 save_figure(plt, f'{model}_{experiment}_{member}_tailwidths_{sig}', 'Maps')
 plt.show()
+
+# Plot time series at a gridpoint (London) to check that trends make sense. 
+# Extract from full data cube with time dimension, not the trend cube.
 
 # Load full tail width data with time dimension
 datadir = f'/data/users/samuel.sancar/Heat_extremes/Tail_widths/'
 full_data_filename = f"{model}_{experiment}_{member}_tailwidths_1958-2022.nc"
 full_cube = iris.load_cube(datadir + full_data_filename)
 
-# Choose a grid point
+# Choose a grid point (London is default)
 lat_index = 55
 lon_index = 37
 
@@ -125,7 +131,6 @@ trend = cube.data[lon_box, lon_box]
 
 plt.figure(figsize=(10, 5))
 plt.plot(np.arange(1958,2023), time_series, marker='o', linestyle='-', label='Tail Width')
-
 plt.title(f"Tail Width timeseries for \n{model} {experiment} {member}\n at Grid Point {lat_index}, {lon_index} (London)", fontsize=14)
 plt.xlabel("Time")
 plt.ylabel("Tail Width (°C)")

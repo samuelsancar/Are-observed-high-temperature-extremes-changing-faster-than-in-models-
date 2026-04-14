@@ -1,9 +1,9 @@
 """
     Function for map plotting details:
-
     
-    Car: Simpler map using PlateCaree projection.
-    Rob: More detailed map using Robinson prejection.
+    Detailed: More detailed map.
+    [anything]: Simpler map details.
+
     
 """
 
@@ -14,7 +14,7 @@ import matplotlib.cm as mpl_cm
 
 def map_features(type, ax, lat_min, lat_max):
     
-    if type == 'Rob':
+    if type == 'Detail':
         
         ax.set_extent([-180, 180, lat_min, lat_max], crs=ccrs.PlateCarree(central_longitude=0))
         ax.coastlines(resolution='50m', linewidth=0.5)
@@ -25,8 +25,11 @@ def map_features(type, ax, lat_min, lat_max):
         ax.add_feature(cfeature.LAND, facecolor='lightgray')
         ax.add_feature(cfeature.OCEAN, facecolor='white')
         
+        for spine in ax.spines.values():
+            spine.set_linewidth(1.5)   
+            spine.set_edgecolor('black')
+        
         gl = ax.gridlines(draw_labels=False, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-
         gl.top_labels = False
         gl.right_labels = False
             
@@ -37,6 +40,6 @@ def map_features(type, ax, lat_min, lat_max):
         ax.add_feature(cfeature.LAND, facecolor='white')
         ax.add_feature(cfeature.OCEAN, facecolor='white')
 
-        #gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-        #gl.top_labels = False
-        #gl.right_labels = False
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = False
+        gl.right_labels = False
