@@ -7,8 +7,7 @@ Note_1: The code calculates tail widths for for model members listed in the Mode
 which includes both Coupled and SST-based HighResMIP Experiments.These are automatically imported from the Excel file, 
 and the code iterates through each row to process the specified model, experiment, and member.
 
-Note_2: This code calculates tail widths for both Coupled and SST-based HighResMIP Experiments.
-The code concatenates/merges tasmax data: hist-1950 (1958-2014) and highres-future (2015-2022) for Coupled experiments, 
+Note_2: The code concatenates/merges tasmax data: hist-1950 (1958-2014) and highres-future (2015-2022) for Coupled experiments, 
 and highresSST-present (1958-2014) and highresSST-future (2015-2022) for SST-based experiments.
 
 Note_3: The code can calculate from files covering varying time periods, as long as they include the year being processed. 
@@ -21,7 +20,6 @@ Directories are created for each institution under the Tailwidthslist directory.
 
 import iris
 import numpy as np
-import sys
 import os
 import glob
 import iris.analysis
@@ -30,8 +28,6 @@ from iris.cube import CubeList
 import cf_units
 import datetime
 import iris.coords
-import traceback
-import logging
 import pandas as pd
 
 def file_covers_year(file_path, year):
@@ -80,7 +76,7 @@ def get_yearly_cube(y, model, experiment, member, datadir, future_expt):
 
 def assign_year_time(cube, year):
     try:
-        time_unit = cf_units.Unit('days since 1950-01-01', calendar='gregorian')
+        time_unit = cf_units.Unit('days since 1970-01-01', calendar='gregorian') #Check if works, otherwise use 'days since 1950-01-01'
         time_point = time_unit.date2num(datetime.datetime(year, 7, 1))
         time_coord = iris.coords.DimCoord([time_point], standard_name='time', units=time_unit)
 
@@ -140,6 +136,10 @@ def run_process_year(args):
 
 def main():
     
+    # Beginning and end year+1
+    t1 = 1958
+    t2 = 2023
+    
     df = pd.read_excel("/data/users/samuel.sancar/Model_table.xlsx", sheet_name='Model Stack', engine="openpyxl")
 
     # ensure consistent column names (strip spaces)
@@ -151,11 +151,11 @@ def main():
         row = df.iloc[row_idx]
 
         # Map columns to variables 
-        Mode       = str(row["Mode"]).strip()
-        Group      = str(row["Group"]).strip()
-        model      = str(row["model"]).strip()
-        experiment = str(row["experiment"]).strip()
-        member     = str(row["member"]).strip()
+        Mode       = str(row["Coupled/SST"]).strip()
+        Group      = str(row["Institution"]).strip()
+        model      = str(row["Model"]).strip()
+        experiment = str(row["Base experiment"]).strip()
+        member     = str(row["Member"]).strip()
         
         print(f'Calculating yearly tail widths for {model}_{experiment}_{member}')
 
@@ -172,7 +172,7 @@ def main():
         if future_expt is None:
             raise ValueError(f"Unknown experiment: {experiment}")
 
-        years = list(range(1958, 2023))
+        years = list(range(t1, t2))
         args_list = [(y, model, experiment, member, datadir, future_expt, template_path)
                     for y in years]
 

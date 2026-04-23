@@ -1,5 +1,5 @@
 """
-Function to save figures with consistent styling and formatting.
+Function to save figures with consistent format and dpi.
 """
 
 import matplotlib.pyplot as plt
@@ -10,5 +10,5 @@ def save_figure(plt, filename, location):
     os.makedirs(folder, exist_ok=True)  
     full_path = os.path.join(folder, f"{filename}.png")  
 
-    plt.savefig(full_path, dpi=1000, format='png')
+    plt.savefig(full_path, dpi=2000, format='png')
     print(f"Figure saved to: {full_path}")

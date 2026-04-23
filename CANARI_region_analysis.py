@@ -1,8 +1,9 @@
 """ 
 17/11/2025
 ----------
-CANARI regional analysis
-
+CANARI regional analysis. Current set up of code is specific to CANARI member 29.
+Bounds for latitudes and longitudes to analyse over are determined by CANARI_regional_selection code.
+Boxes are determined based on regions considered as robust heatwave hot spots, passing all conditions, as specified in the methods.
 """
 
 import iris
@@ -11,7 +12,6 @@ import glob
 import matplotlib.pyplot as plt
 import iris.plot as iplt
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 import matplotlib.cm as mpl_cm
 import numpy as np
 import xarray as xr
@@ -25,7 +25,6 @@ from Save_figure_function import save_figure
 from Lat_Land_mask_function import lat_land_mask
 from Map_features import map_features
 
-
 def index_to_letters(i: int) -> str:
     alphabet = string.ascii_uppercase
     s = ""
@@ -38,14 +37,21 @@ def index_to_letters(i: int) -> str:
         n -= 1
     return s
 
+# Beginning and end year+1
+t1 = 1958
+t2 = 2023
+
+lat_minimum = -60
+lat_maximum = 90
 
 member = sys.argv[1]
 
-era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
-jra55 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc')
+template = iris.load_cube('template_cube_1deg.nc')
+era5 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_{t1}-{t2-1}.nc')
+jra55 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_{t1}-{t2-1}.nc')
 
 # Load CANARI files
-CANARI_files = sorted(glob.glob('/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend_1958-2023.nc'))
+CANARI_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend_{t1}-{t2-1}.nc'))
 
 # Regions and titles for member 32
 #regtitles = ['Northeast United States', 'Southwest Canada', 'Southeast Brazil', 'Paraguay', 'Northwest Africa', 'Eastern Central China', 'Northeast Russia'] # , 'Northern Summatra'
@@ -65,36 +71,39 @@ reglons = [[-76.5, -65.5], [-68.5, -60], [13.5, 22.5], [24.5, 36.5], [-10.5, -1.
 cmap_rb = mpl_cm.get_cmap('coolwarm', 10)
 
 datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/'
-filename = f"{member}_tailwidth_trend_1958-2023.nc"
+filename = f"{member}_tailwidth_trend_{t1}-{t2-1}.nc"
+
 cube = iris.load_cube(datadir + filename)
 p87p5_trend = iris.load_cube(datadir + filename.replace('tailwidth', 'p87p5'))
 
-masked_cube, _ = lat_land_mask(cube, -60, 90)
-p87p5_masked, _ = lat_land_mask(p87p5_trend, -60, 90)
+masked_cube, _ = lat_land_mask(cube, template, lat_minimum, lat_maximum)
+p87p5_masked, _ = lat_land_mask(p87p5_trend, template, lat_minimum, lat_maximum)
 
 # Extract grid points for stippling
 lon = cube.coord('longitude').points
 lat = cube.coord('latitude').points
 lon2d, lat2d = np.meshgrid(lon, lat)
 
-# Negative p87p5 trend points
-neg_indices = np.where(p87p5_masked.data < 0)
+# Extract grid point locations where p87p5 trend is negative for overlaying white stippling
+neg_mask = np.ma.filled(p87p5_masked.data < 0, False)
+neg_indices = np.where(neg_mask)
+
 neg_lats = lat2d[neg_indices]
 neg_lons = lon2d[neg_indices]
 
 # Significance mask
-sig_datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/'
-statsig_ds = iris.load_cube(f"{sig_datadir}{member}_tailwidths_p_1958.nc")
-#statsig = statsig_ds.data.astype(bool)
-sig_mask_np = statsig_ds.data < 0.05
+statsig = iris.load_cube(f"/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/{member}_p_{t1}-{t2-1}.nc")
+statsig_masked, _ = lat_land_mask(statsig, template, lat_minimum, lat_maximum)
+sig_mask_np = np.ma.filled(statsig_masked.data < 0.05, False)
 stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
+# Plot tailwidth trend
 fig = plt.figure(figsize=(12, 6))
 ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
-ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
 
-# Plot tailwidth trend
-iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
+map_features('Detail', ax, lat_minimum, lat_maximum)
+
+map = iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
 # Overlay negative trend points
 ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
@@ -125,20 +134,23 @@ for i, (title, lat_range, lon_range) in enumerate(zip(regtitles, reglats, reglon
         path_effects=[pe.withStroke(linewidth=2, foreground='white')]
     )
 
+# Plot stippling for significant trends
 ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.6, transform=ccrs.PlateCarree(), label='Significant')
 
-map_features('Rob', ax, -60, 90)
-
-cbar = plt.colorbar(ax.collections[0], orientation='horizontal', pad=0.05, aspect=50)
+cbar = plt.colorbar(map, orientation='horizontal', pad=0.05, aspect=50)
 cbar.set_label('Trend in Tail width (°C per decade)', fontsize=13)
 
-plt.title(f"CANARI-LE member {member} tail width trends (1958–2022)", fontsize=15, weight='bold')
+plt.title(f"CANARI-LE member {member} tail width trends ({t1}-{t2-1})", fontsize=15, weight='bold')
 plt.tight_layout()
 save_figure(plt, f'CANARI_{member}_tailwidths_p', 'Maps')
 plt.show()
 
 # Land-sea mask
 lsm = xr.open_dataset('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')['lsm'].squeeze()
+
+template_lat_points = template.coord('latitude').points
+template_lon_points = template.coord('longitude').points
+lsm_interp = lsm.interp(latitude=template_lat_points, longitude=template_lon_points, method="nearest")
 
 n_regions = len(regtitles)
 
@@ -155,10 +167,7 @@ fig, axes = plt.subplots(
 
 plt.subplots_adjust(wspace=0.45, hspace=0.35)
 
-years = np.arange(1958, 2023)
-
-#positions = [1, 2, 3]
-#labels    = ['CANARI', 'ERA5', 'JRA-55']
+years = np.arange(t1, t2)
 
 positions = [1,2]
 labels = ['CANARI-LE', 'Reanalyses']
@@ -180,17 +189,16 @@ line_color_others = 'grey'
 
 first_line_ax = None
 
-# Iterate over ALL regions using single index
+# Iterate over all regions 
 for i, region_name in enumerate(regtitles):
-    #ax_line = axes[0, i]   # top row: line plots
     if i <= 3:
-        ax_box  = axes[0, i]   # bottom row: boxplots
+        ax_box  = axes[0, i]  
     else:
         ax_box = axes[1, i-4]
 
     # Reanalysis regional averages (series and trend)
-    era5_series  = regional_tailwidths('era5',  reglats[i], reglons[i])
-    jra55_series = regional_tailwidths('jra55', reglats[i], reglons[i])
+    era5_series  = regional_tailwidths('era5',  reglats[i], reglons[i], lat_minimum, lat_maximum, t1, t2)
+    jra55_series = regional_tailwidths('jra55', reglats[i], reglons[i], lat_minimum, lat_maximum, t1, t2)
     era5_trends  = regional_trends(era5_series)   
     jra55_trends = regional_trends(jra55_series)  
 
@@ -202,13 +210,10 @@ for i, region_name in enumerate(regtitles):
         member_name = fname.split('/')[-1].split('_')[0]
 
         # Land-sea mask
-        lat_points = trend_cube.coord('latitude').points
-        lon_points = trend_cube.coord('longitude').points
-        lsm_interp = lsm.interp(latitude=lat_points, longitude=lon_points, method="nearest")
         trend_cube.data = np.ma.masked_where(lsm_interp.values <= 0.5, trend_cube.data)
 
         # Regional series and trend
-        region_series = regional_tailwidths(member_name, reglats[i], reglons[i])
+        region_series = regional_tailwidths(member_name, reglats[i], reglons[i], lat_minimum, lat_maximum, t1, t2)
         avg_trend     = regional_trends(region_series)  
 
         if np.size(avg_trend) != 0:
@@ -223,31 +228,20 @@ for i, region_name in enumerate(regtitles):
                 region_pvals.append((region_name, np.round(p_val, 4)))
 
                 # Trend line 
-                #ax_line.plot(years, fit_line, linewidth=2.5, color=line_color_member, label=f'Member: {member_name}')
                 # Overlay series (centered to match the fitted line’s mean)
                 mean_fit  = np.nanmean(fit_line)
                 mean_data = np.nanmean(region_series.data)
                 delta = mean_data - mean_fit
-                #ax_line.plot(years, region_series.data - delta, linewidth=1.0, color=line_color_member)
                 pseudo_obs = avg_trend
-            #else:
-                #ax_line.plot(years, fit_line, linewidth=0.9, alpha=0.35, color=line_color_others)
 
-    # ERA5/JRA-55 fitted lines
+    # ERA5 & JRA-55 fitted lines
     if np.size(jra55_trends) != 0:
         jra55_line = jra55_trends / 10.0 * (years - years[0])
-        #ax_line.plot(years, jra55_line, linewidth=2.0, color=line_color_jra, label='JRA-55')
         all_trends.append(jra55_trends)
 
     if np.size(era5_trends) != 0:
         era5_line = era5_trends / 10.0 * (years - years[0])
-        #ax_line.plot(years, era5_line, linewidth=2.0, color=line_color_era, label='ERA5')
         all_trends.append(era5_trends)
-
-    #ax_line.set_title(region_name, fontsize=17, fontweight='bold', pad=8)
-    #ax_line.tick_params(axis='both', labelsize=12)
-    #ax_line.set_xlim(years[0], years[-1])
-    #ax_line.grid(True, alpha=0.4)
 
     # Boxplot
     ax_box.set_title(region_name, fontsize=17, fontweight='bold', pad=8)
@@ -262,7 +256,7 @@ for i, region_name in enumerate(regtitles):
             medianprops={'linewidth': 2, 'color': 'black'}
         )
 
-    # Mark ERA5/JRA-55 and pseudo-observation
+    # Plot ERA5, JRA-55 and pseudo-observation
     if np.size(era5_trends) != 0:
         ax_box.scatter(2, era5_trends, color=line_color_era, marker='D', s=250, linewidths=1.8, label = 'ERA5')
     if np.size(jra55_trends) != 0:
@@ -285,21 +279,14 @@ for i, region_name in enumerate(regtitles):
                         np.round(jra_are_percentile,2),
                         np.round(pseudo_obs_percentile,2)))
 
-#axes[0, 0].set_ylabel('Average yearly\n tail width (°C)', fontsize=19)
 axes[0, 0].set_ylabel('Average tail width \n trend (°C/decade)', fontsize=22)
 axes[1, 0].set_ylabel('Average tail width\n trend (°C/decade)', fontsize=22)
-
-#if len(all_trends) > 0:
-#    global_ylim = (min(all_trends) - 0.05, max(all_trends) + 0.05)
-#    for i in range(n_regions):
-#        axes[1, i].set_ylim(global_ylim)
 
 handles, lbls = axes[0, 0].get_legend_handles_labels()
 fig.legend(handles, ['ERA5', 'JRA-55', 'Member 29'],
            loc='upper left', bbox_to_anchor=(0.70, 0.995), ncol=3, fontsize=20)
 
-# Figure title
-fig.suptitle('Regional Tailwidth Trends (1958–2022)', fontsize=18, fontweight='bold', y=1.06)
+fig.suptitle(f'Regional Tailwidth Trends ({t1}-{t2-1})', fontsize=18, fontweight='bold', y=1.06)
 
 length_str = str(n_regions)
 save_figure(plt, f"CANARI_regional_trends_member_{member}.png", 'Graphs')

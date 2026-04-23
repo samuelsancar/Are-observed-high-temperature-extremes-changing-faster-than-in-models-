@@ -12,6 +12,15 @@ import sys
 from Save_figure_function import save_figure
 from Lat_Land_mask_function import lat_land_mask
 
+# Beginning & end year+1
+t1 = 1958 
+t2 = 2023
+
+lat_minimum = -60
+lat_maximum = 80
+
+template = iris.load_cube('template_cube_1deg.nc')
+
 def guess_bounds(cube):
     
     if not cube.coord('latitude').has_bounds():
@@ -29,14 +38,14 @@ def guess_bounds(cube):
     
 def pass_conditions(member1):
     
-    member1_trend = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_1958-2023.nc')
-    member1_masked, _ = lat_land_mask(member1_trend, -60, 80)
+    member1_trend = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_{t1}-{t2-1}.nc')
+    member1_masked, _ = lat_land_mask(member1_trend, template, lat_minimum, lat_maximum)
     member1_agreement = np.load(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_trend_agreement.npy')
-    member1_trend_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_1980-2023.nc')
-    member1_1980_masked, _ = lat_land_mask(member1_trend_1980, -60, 80)
+    member1_trend_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_{t1}-{t2-1}.nc')
+    member1_1980_masked, _ = lat_land_mask(member1_trend_1980, template, lat_minimum, lat_maximum)
     
     #member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/FDR_corrections_All/{member1}_tailwidths_p_1958_fdr_significant_all.nc')
-    member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/{member1}_tailwidths_p_1958.nc')
+    member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/{member1}_p_{t1}-{t2-1}.nc')
     
     member1_masked = guess_bounds(member1_masked)
     
@@ -87,23 +96,23 @@ if variable == 'iterate':
         _80th_percentile.append(no_0p9)
 
     member_passes_array = np.array(member_passes)
-    era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
-    era5_masked, _ = lat_land_mask(era5, -60, 80)       
-    #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_all_1958-2023.nc')
-    era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_1958-2023.nc')
+    era5 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_{t1}-{t2-1}.nc')
+    era5_masked, _ = lat_land_mask(era5, template, lat_minimum, lat_maximum)       
+    #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_corrected_p_{t1}-{t2-1}.nc')
+    era5_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_{t1}-{t2-1}.nc')
 
-    era5_agreement = np.load('/home/users/samuel.sancar/Documents/Temperature_extremes/Model_agreement/CANARI_ERA5_gridpoint_fractions.npy')
-    era5_1980 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1980-2023.nc')
-    era5_1980_masked, _ = lat_land_mask(era5_1980, -60, 80)
+    era5_agreement = np.load(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_agreement/Model_agreement/CANARI_ERA5_agreement_field.npy') #CANARI_ERA5_gridpoint_fractions.npy
+    era5_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1980-2022.nc')
+    era5_1980_masked, _ = lat_land_mask(era5_1980, template, lat_minimum, lat_maximum)
     era5_1980_array = era5_1980_masked.data.astype(float)
     era5_array = era5_masked.data.astype(float)
     
-    merra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/MERRA_daily_maximum_2m_temperature_tailwidth_trends_1980-2023.nc')
-    jra = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1958-2023.nc')
-    jra_1980 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1980-2023.nc')
-    merra, _= lat_land_mask(merra, -60, 80)
-    jra, _ = lat_land_mask(jra, -60, 80)
-    jra_1980, _ = lat_land_mask(jra_1980, -60, 80)
+    merra = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/MERRA_daily_maximum_2m_temperature_tailwidth_trends_1980-2022.nc')
+    jra = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_{t1}-{t2-1}.nc')
+    jra_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_1980-2022.nc')
+    merra, _= lat_land_mask(merra, template, lat_minimum, lat_maximum)
+    jra, _ = lat_land_mask(jra, template, lat_minimum, lat_maximum)
+    jra_1980, _ = lat_land_mask(jra_1980, template, lat_minimum, lat_maximum)
     
     
     era5_masked = guess_bounds(era5_masked)
@@ -145,11 +154,7 @@ if variable == 'iterate':
     
     print(f'ERA5 has {era5_masked_area} metres squared, {era5_number_of_gridpoints} gridpoints, that passed all three conditions. It is in the {np.round(era5_percentile, 1)} % of the model members spread for number of grid points that passed all three conditions.')
     print(f'Member 29 is in the {np.round(member_percentile, 1)} % of the model members spread for number of grid points that passed all three conditions.')
-    #_80th_array = np.array(_80th_percentile)
-    #era5_80th_percentile = (np.sum(_80th_array < era5_no_0p9)) / (len(_80th_array)) * 100
-    #print(f'ERA5 has {era5_80th_percentile} gridpoints where it has trends greater than the 80% of models. It is in the {np.round(era5_80th_percentile)} % of the model members spread for number of grid points that passed all three conditions.')
-     
-    #plt.style.use('ggplot')
+
     plt.figure(figsize=(12, 6))
     plt.hist(member_passes, bins = 'auto', histtype='bar',
     color="#4682B4",  
@@ -163,7 +168,7 @@ if variable == 'iterate':
         spine.set_linewidth(2)
 
     plt.axvline(x=era5_masked_area, color='black', linestyle='-', linewidth=2.5, label='ERA5')
-    plt.axvline(x=chosen_area, color='#d55e00', linestyle='-', linewidth=2.5, label='Member 29')
+    plt.axvline(x=chosen_area, color='black', linestyle='--', linewidth=2.5, label='Member 29')
     plt.xlabel('Total area to pass all 4 conditions (\u00D710\u00B9\u00B2 m\u00B2)', fontsize=21)
     plt.ylabel('Frequency', fontsize=21)
     plt.xticks(fontsize=19)
@@ -184,14 +189,14 @@ else:
     
     if member1 =='era5':
         
-        era5 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1958-2023.nc')
-        era5_masked, _ = lat_land_mask(era5, -60, 80)       
-        #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_all_1958-2023.nc')
-        era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_1958-2023.nc')
+        era5 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_{t1}-{t2-1}.nc')
+        era5_masked, _ = lat_land_mask(era5, template, lat_minimum, lat_maximum)       
+        #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_all_{t1}-{t2-1}.nc')
+        era5_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_{t1}-{t2-1}.nc')
 
-        era5_agreement = np.load('/home/users/samuel.sancar/Documents/Temperature_extremes/Model_agreement/CANARI_ERA5_gridpoint_fractions.npy')
-        era5_1980 = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1980-2023.nc')
-        era5_1980_masked, _ = lat_land_mask(era5_1980, -60, 80)
+        era5_agreement = np.load(f'/home/users/samuel.sancar/Documents/Temperature_extremes/Model_agreement/CANARI_ERA5_gridpoint_fractions.npy')
+        era5_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_1980-2022.nc')
+        era5_1980_masked, _ = lat_land_mask(era5_1980, template, lat_minimum, lat_maximum)
         era5_masked = guess_bounds(era5_masked)
         
         # Ensure a "valid data" mask from the primary cube
@@ -212,9 +217,8 @@ else:
         lons = era5_masked.coord('longitude').points
         
         plt.figure(figsize=(12,6))
-        #ax = plt.axes(projection=ccrs.Robinson(central_longitude= 0))
         ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
-        ax.set_extent([-180, 180, -60, 80], crs=ccrs.PlateCarree(central_longitude=0))
+        ax.set_extent([-180, 180, lat_minimum, 80], crs=ccrs.PlateCarree(central_longitude=0))
         
         for spine in ax.spines.values():
             spine.set_linewidth(3)   
@@ -230,15 +234,15 @@ else:
                             cmap=cmap, norm=norm,
                             transform=ccrs.PlateCarree(central_longitude=0))
 
-        #cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
-        #cb.set_label('Number of conditions true', fontsize=13)
+        cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
+        cb.set_label('Number of conditions true', fontsize=13)
 
         # Compute midpoints for tick positions
         #midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
 
-        #cb.set_ticks(midpoints)
-        #cb.ax.tick_params(labelsize=12)
-        #cb.set_ticklabels(['0', '1', '2', '3', '4'])
+        cb.set_ticks(midpoints)
+        cb.ax.tick_params(labelsize=12)
+        cb.set_ticklabels(['0', '1', '2', '3', '4'])
         plt.title(f'ERA5', fontsize=18, fontweight='bold')
         save_figure(plt, f'ERA5_region_selection', 'Maps')
         plt.show()
@@ -252,14 +256,13 @@ else:
         lons = member1_masked.coord('longitude').points
         
         plt.figure(figsize=(12,6))
-        #ax = plt.axes(projection=ccrs.Robinson(central_longitude= 0))
         ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
         
         for spine in ax.spines.values():
             spine.set_linewidth(3)  
             spine.set_edgecolor('black')
     
-        ax.set_extent([-180, 180, -60, 80], crs=ccrs.PlateCarree(central_longitude=0))
+        ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
         ax.coastlines()
         ax.add_feature(cfeature.LAND, facecolor='lightgray')
         ax.add_feature(cfeature.OCEAN, facecolor='white', zorder = 3)
@@ -270,15 +273,15 @@ else:
                             cmap=cmap, norm=norm,
                             transform=ccrs.PlateCarree(central_longitude=0))
 
-        cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
-        cb.set_label('Number of conditions true', fontsize=16)
+        #cb = plt.colorbar(mesh, orientation='horizontal', pad=0.05, aspect=50)
+        #cb.set_label('Number of conditions true', fontsize=16)
 
         # Compute midpoints for tick positions
-        midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
+        #midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
 
-        cb.set_ticks(midpoints)
-        cb.ax.tick_params(labelsize=15)
-        cb.set_ticklabels(['0', '1', '2', '3', '4'])
+        #cb.set_ticks(midpoints)
+        #cb.ax.tick_params(labelsize=15)
+        #cb.set_ticklabels(['0', '1', '2', '3', '4'])
         plt.title(f'CANARI-LE member {member1}', fontsize=18, fontweight='bold')
         save_figure(plt, f'CANARI_member_{member1}_region_selection', 'Maps')
         plt.show()

@@ -21,7 +21,7 @@ template = iris.load_cube('template_cube_1deg.nc')
 datadir = '/data/users/samuel.sancar/Climate_models/JRA-55/'
 outdir = '/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/'
 
-# Beginning & end year
+# Beginning & end year+1
 t1 = 1958
 t2 = 2023
 

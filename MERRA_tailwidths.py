@@ -1,26 +1,27 @@
 """
-Code to merge monthly MERRA data and calculate tail width (p99-p87.5) in daily tasmax.
+15/01/2026
+----------
+Code to calculate annual tail width (p99-p87.5) from MERRA2 tasmax derived from hourly instantaneous temperature.
 """
 
 import iris
 import iris.util
 import os
-from Lat_Land_mask_function import lat_land_mask
 import numpy as np
 import iris.analysis.stats
-from iris.coords import DimCoord
 
-# Beginning & end year
-t1 = 1958 
-t2 =2023
-
-years = np.arange(2020,2021)
+template = iris.load_cube('template_cube_1deg.nc')
 
 datadir = '/data/users/samuel.sancar/Climate_models/MERRA/'
 outdir = '/data/users/samuel.sancar/Heat_extremes/MERRA_tailwidths/'
-template = iris.load_cube('template_cube_1deg.nc')
 
 os.makedirs(outdir, exist_ok=True)
+
+# Beginning & end year+1
+t1 = 1958
+t2 = 2023
+
+years = np.arange(t1,t2)
 
 # Calculate tailwidths over years t1-t2
 for y in years:
@@ -64,7 +65,7 @@ for y in years:
 
     # Save each year's cube separately
     out_file = os.path.join(outdir, f"MERRA_daily_maximum_2m_temperature_{y}_tail_width.nc")
-    outfile_87p5 = os.path.join(outdir, f"daily_maximum_2m_temperature_{y}_87p5.nc")
+    outfile_87p5 = os.path.join(outdir, f"MERRA_daily_maximum_2m_temperature_{y}_87p5.nc")
     iris.save(tail_width_rg, out_file)
     iris.save(p87p5_regrid, outfile_87p5)
     

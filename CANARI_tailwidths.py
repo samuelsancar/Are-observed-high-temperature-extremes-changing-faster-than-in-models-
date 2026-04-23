@@ -2,7 +2,7 @@
 31/10/2025
 ----------
 
-Code to calculate tailwidths from CANARI data.
+Code to calculate CANARI large ensemble (n=40) tail widths (p99-p87.5) in daily tasmax.
 
 """
 
@@ -13,13 +13,12 @@ import re
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Paths
+# Directories
 base_data_path = "/data/users/samuel.sancar/Climate_models/CANARI"
 output_base_dir = "/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari"
-template_path = "template_cube_1deg.nc"
 
 os.makedirs(output_base_dir, exist_ok=True)
-template_cube = iris.load_cube(template_path)
+template_cube = iris.load_cube("template_cube_1deg.nc")
 
 def process_file(file_path):
     try:

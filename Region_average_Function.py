@@ -6,9 +6,12 @@ import iris.analysis.cartography as iac
 import iris.coord_categorisation as icc
 from iris.coord_categorisation import add_year
 from cf_units import Unit
-from Lat_Land_mask_function import lat_land_mask, ThreeD_lat_land_mask
+from Lat_Land_mask_function import lat_land_mask
+
+template = iris.load_cube("template_cube_1deg.nc")
 
 def get_area_weights(cube):
+    '''Get area-weights'''
     for coord in ['latitude', 'longitude']:
         if not cube.coord(coord).has_bounds():
             cube.coord(coord).guess_bounds()
@@ -22,6 +25,7 @@ def drop_problem_coords(cube):
     return cube
 
 def relabel_time_to_year(cube):
+    '''NOT USED'''
     years = cube.coord('time').points.astype(int)
     year_dim = iris.coords.DimCoord(years, long_name='year', units='1')
     out = iris.cube.Cube(
@@ -34,6 +38,7 @@ def relabel_time_to_year(cube):
     return out
 
 def areaMean(cube):
+    '''Helper function to calculate region mean tail width for a given region'''
     cube.data = np.ma.masked_invalid(cube.data)
     collapse_dims = [dim for dim in ['latitude', 'longitude'] if dim in [coord.name() for coord in cube.coords()]]
     if collapse_dims:
@@ -44,7 +49,7 @@ def areaMean(cube):
     return cube
 
 def area_mean_over_latlon_per_timestep(cube):
-
+    '''NOT USED'''
     # mask invalids to avoid propagating NaNs
     cube.data = np.ma.masked_invalid(cube.data)
 
@@ -63,8 +68,9 @@ def area_mean_over_latlon_per_timestep(cube):
     # Collapses only spatial dims; 'time' remains
     return cube.collapsed(collapse_dims, ia.MEAN, weights=weights)
 
-def regional_tailwidths(member_name, reglats, reglons):
-    period = list(range(1958, 2023))
+def regional_tailwidths(member_name, reglats, reglons, lat_minimum, lat_maximum, t1, t2):
+    '''Calculate region average tail widths for a defined region'''
+    period = list(range(t1, t2))
     annual_values = []
     units_out = None
 
@@ -72,13 +78,13 @@ def regional_tailwidths(member_name, reglats, reglons):
         # Load cube for this year
         if member_name == 'era5':
             cube = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/era5_daily_maximum_2m_temperature_{year}_tail_width.nc')
-            cube, _ = lat_land_mask(cube, -60, 90)
+            cube, _ = lat_land_mask(cube, template, lat_minimum, lat_maximum)
         elif member_name == 'jra55':
             cube = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/jra55__minmax_surf.015_tmax.reg_tl319._{year}_tail_width.nc')
-            cube, _ = lat_land_mask(cube,-60, 90)
+            cube, _ = lat_land_mask(cube, template, lat_minimum, lat_maximum)
         else:
             cube = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari/member{member_name}/tailwidth_member{member_name}_{year}.nc')
-            cube, _ = lat_land_mask(cube, -60, 90)    
+            cube, _ = lat_land_mask(cube, template, lat_minimum, lat_maximum)    
             
         # Drop problematic coords
         cube  = drop_problem_coords(cube)
@@ -90,7 +96,7 @@ def regional_tailwidths(member_name, reglats, reglons):
         cube_reg = cube.intersection(latitude=reglats, longitude=reglons)
         cube_reg_mean = areaMean(cube_reg)
 
-        # Collapse any remaining dimensions (e.g., level)
+        # Collapse any remaining dimensions 
         while cube_reg_mean.ndim > 0:
             cube_reg_mean = cube_reg_mean.collapsed(cube_reg_mean.coords()[0].name(), ia.MEAN)
 
@@ -108,6 +114,7 @@ def regional_tailwidths(member_name, reglats, reglons):
 def MIP_regional_tailwidths(member_name, reglats, reglons,
                             path_template='/data/users/samuel.sancar/Heat_extremes/Tail_widths/{member}_tailwidths.nc'):
 
+    '''NOT USED'''
     print(f"Processing member: {member_name}")
     cube = iris.load_cube(path_template.format(member=member_name))
     print("Input shape:", cube.shape)

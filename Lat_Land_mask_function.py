@@ -10,9 +10,9 @@ import iris
 import iris.coords
 import iris.cube
 
-def lat_land_mask(model, min_threshold, max_threshold):
+def lat_land_mask(model, template, min_threshold, max_threshold):
+    
     # Load template and land-sea mask
-    template = iris.load_cube('template_cube_1deg.nc')
     lsm = iris.load_cube('lsm_1279l4_0.1x0.1.grb_v4_unpack.nc')
     lsm_regridded = lsm.regrid(template, iris.analysis.Nearest())
 
@@ -41,7 +41,7 @@ def lat_land_mask(model, min_threshold, max_threshold):
         raise TypeError("Input 'model' must be an Iris cube or a NumPy array.")
 
     # Apply mask
-    masked_data = np.where(combined_mask, model_data, np.nan)
+    masked_data = np.ma.masked_where(~combined_mask, model_data)
 
     # Wrap masked data into an Iris cube
     lat_coord = template.coord('latitude')
@@ -90,7 +90,7 @@ def ThreeD_lat_land_mask(model, min_threshold, max_threshold):
     expanded_mask = np.broadcast_to(combined_mask, model_data.shape)
 
     # Apply mask
-    masked_data = np.where(expanded_mask, model_data, np.nan)
+    masked_data = np.ma.masked_where(~expanded_mask, model_data)
 
     # Slice coordinates to match masked_data shape
     lat_coord = iris.coords.DimCoord(

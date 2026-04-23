@@ -23,7 +23,7 @@ def map_features(type, ax, lat_min, lat_max):
         ax.add_feature(cfeature.STATES.with_scale('110m'), edgecolor='0', facecolor='none', lw=.2)
         ax.add_feature(cfeature.RIVERS.with_scale('110m'), edgecolor='tab:blue', facecolor='none', lw=.4)
         ax.add_feature(cfeature.LAND, facecolor='lightgray')
-        ax.add_feature(cfeature.OCEAN, facecolor='white')
+        ax.add_feature(cfeature.OCEAN, facecolor='white', zorder =0)
         
         for spine in ax.spines.values():
             spine.set_linewidth(1.5)   
@@ -38,7 +38,7 @@ def map_features(type, ax, lat_min, lat_max):
         ax.set_extent([-180, 0, 60, 90], crs=ccrs.PlateCarree())
         ax.coastlines()
         ax.add_feature(cfeature.LAND, facecolor='white')
-        ax.add_feature(cfeature.OCEAN, facecolor='white')
+        ax.add_feature(cfeature.OCEAN, facecolor='white', zorder = 0)
 
         gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
         gl.top_labels = False
