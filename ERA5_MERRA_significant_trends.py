@@ -85,15 +85,15 @@ ax.scatter(
 
 ax.set_extent([-135, 160, -60, 90], crs=ccrs.PlateCarree())
 
-plt.title(f"ERA5 and MERRA NW Europe significant trends ({t1}-{t2-1})", fontsize=18, weight='bold')
+plt.title(f"b) ERA5 and MERRA-2 significant trends ({t1}-{t2-1})", fontsize=18, weight='bold')
 
 import matplotlib.patches as mpatches
 handles = [
     mpatches.Patch(facecolor='red',   label='Both'),
     mpatches.Patch(facecolor='black', label='ERA5'),
-    mpatches.Patch(facecolor='blue',  label='MERRA2'),
+    mpatches.Patch(facecolor='blue',  label='MERRA-2'),
 ]
 fig.legend(handles=handles, loc='lower center', ncol=3)
 
-save_figure(plt, f'ERA5_MERRA_sig_trends({t1}-{t2-1}({sig}))', 'Maps')
+save_figure(plt, f'ERA5_MERRA-2_sig_trends({t1}-{t2-1}({sig}))', 'Maps')
 plt.show()

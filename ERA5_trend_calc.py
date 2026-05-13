@@ -16,7 +16,7 @@ import cf_units
 from Trend_calculation_functions import (create_time_coord, create_year_cube, maskp87p5, load_yearly_cubes, stack_cubes, calculate_trend)
 
 # Beginning & end year+1
-t1 = 1958
+t1 = 1979
 t2 = 2023 
     
 years = np.arange(t1, t2)
@@ -45,21 +45,6 @@ p87p5_cube.long_name = f'Yearly p87p5 ({t1}-{t2-1}'
 
 # Save the combined yearly tail width cubes for reference        
 iris.save(data_cube, os.path.join(datadir, f"{reanalysis}_{variable}_tailwidths_{t1}-{t2-1}.nc"))
-        
-year_cube, p87p5_year_cube = create_year_cube(data_cube, p87p5_cube, years)
-trend = calculate_trend(year_cube, data_cube)
-p87p5_trend = calculate_trend(p87p5_year_cube, p87p5_cube)
-masked_neg_trends = maskp87p5(p87p5_trend, trend)
-    
-masked_neg_trends.rename(f'Tail width trends ({t1}-{t2-1})')
-p87p5_trend.rename(f'p87p5 trends ({t1}-{t2-1})')
-    
-# Save the trend cubes    
-out_file = os.path.join(outdir, f"{reanalysis}_{variable}_tailwidth_trends_{t1}-{t2-1}.nc")
-iris.save(masked_neg_trends, out_file)
-    
-p87p5_out_file = os.path.join(outdir, f"{reanalysis}_{variable}_p87p5_trends_{t1}-{t2-1}.nc")
-iris.save(p87p5_trend, p87p5_out_file) # Save to plot stippling
 
 
 

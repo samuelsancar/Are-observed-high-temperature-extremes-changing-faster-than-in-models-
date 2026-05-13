@@ -66,7 +66,7 @@ lon2d, lat2d = np.meshgrid(lon, lat)
 
 # Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
-    statsig = iris.load_cube(f"{datadir}{reanalysis}_{variable}_tailwidth_fdr_all_{t1}-{t2-1}.nc")
+    statsig = iris.load_cube(f"{datadir}{reanalysis}_{variable}_fdr_corrected_p_{t1}-{t2-1}.nc")
     data = statsig.data  # masked array
     stipple_mask = (~data.mask) & data.astype(bool)
     stipple_lats, stipple_lons = lat2d[stipple_mask], lon2d[stipple_mask]
@@ -92,16 +92,16 @@ map_features('Detail', ax, lat_minimum, lat_maximum)
 map = iplt.pcolormesh(model_mask, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
 # Plot significant trends
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.6, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
+ax.scatter(stipple_lons, stipple_lats, color='black', s=0.6, alpha=0.6, transform=ccrs.PlateCarree(), label='Stippling')
 
-# Overlay white dots where p87p5_trend is negative
-ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
+# Pot grey stippling where p87p5_trend is negative
+ax.scatter(neg_lons, neg_lats, color="grey", s=0.4, alpha=0.6, marker = 's', transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
-cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
-cbar.ax.tick_params(labelsize=12)
-cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
+#cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
+#cbar.ax.tick_params(labelsize=12)
+#cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
 
-plt.title(f"JRA-55", fontsize=17, weight='bold')
+plt.title(f"b) JRA-55", fontsize=17, weight='bold')
 plt.tight_layout()
 save_figure(plt, f'JRA-55_taiwidth_trends_({t1}-{t2-1})({sig})', 'Maps')
 plt.show()

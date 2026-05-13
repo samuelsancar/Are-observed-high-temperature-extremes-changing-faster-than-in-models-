@@ -85,7 +85,7 @@ ax.scatter(jra_only_lon, jra_only_lat, marker='s', s=4, alpha=0.5,facecolors='bl
 
 ax.set_extent([-135, 160, -60, 80], crs=ccrs.PlateCarree())
 
-plt.title(f"ERA5 and JRA-55 significant trends ({t1}-{t2-1})", fontsize=18, weight='bold')
+plt.title(f"b) ERA5 and JRA-55 significant trends ({t1}-{t2-1})", fontsize=17, weight='bold')
 
 import matplotlib.patches as mpatches
 handles = [

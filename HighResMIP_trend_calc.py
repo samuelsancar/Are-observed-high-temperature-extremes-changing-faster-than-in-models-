@@ -28,7 +28,7 @@ for row in np.arange(0,63):
 
     # Map columns to variables 
     Mode       = str(row["Coupled/SST"]).strip()
-    model      = str(row["Institution"]).strip()
+    model      = str(row["Model"]).strip()
     experiment = str(row["Base experiment"]).strip()
     member     = str(row["Member"]).strip()
 

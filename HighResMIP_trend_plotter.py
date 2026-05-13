@@ -74,14 +74,14 @@ lon2d, lat2d = np.meshgrid(lon, lat)
 
 # Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
-    sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections_All/'
-    statsig = iris.load_cube(f"{sig_datadir}{model}_{experiment}_{member}_fdr_significant_all.nc")
+    sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/FDR_corrections/'
+    statsig = iris.load_cube(f"{sig_datadir}{model}_{experiment}_{member}_fdr_corrected_p_{t1}-{t2-1}.nc")
     data = statsig.data  # masked array
     stipple_mask = (~data.mask) & data.astype(bool)
     stipple_lats, stipple_lons = lat2d[stipple_mask], lon2d[stipple_mask]
 else:
     sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/P-vals/'
-    statsig = iris.load_cube(f"{sig_datadir}{model}_{experiment}_{member}_tailwidth_p_{t1}-{t2-1}.nc")
+    statsig = iris.load_cube(f"{sig_datadir}{model}_{experiment}_{member}_p_{t1}-{t2-1}.nc")
     statsig_masked, _ = lat_land_mask(statsig, template, lat_minimum, lat_maximum)
     sig_mask_np = np.ma.filled(statsig_masked.data < alpha, False)
     stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
@@ -101,17 +101,17 @@ map_features('Detail', ax, lat_minimum, lat_maximum)
 
 map = iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
-# Overlay white dots where p87p5_trend is negative
-ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
-
 # Plot significant trends
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.6, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
+ax.scatter(stipple_lons, stipple_lats, color='black', s=0.6, alpha=0.6, transform=ccrs.PlateCarree(), label='Stippling')
 
-cbar = plt.colorbar(map, ax = ax, orientation='horizontal', pad=0.05, aspect=50)
-cbar.ax.tick_params(labelsize=12)
-cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
+# Pot grey stippling where p87p5_trend is negative
+ax.scatter(neg_lons, neg_lats, color="grey", s=0.4, alpha=0.6, marker = 's', transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
+
+#cbar = plt.colorbar(map, ax = ax, orientation='horizontal', pad=0.05, aspect=50)
+#cbar.ax.tick_params(labelsize=12)
+#cbar.set_label('Trend in Tailwidth (°C per decade)', fontsize=14)
     
-plt.title(f"{model} {exp} {member}", fontsize=17, weight='bold')
+plt.title(f"d) {model} {exp} {member}", fontsize=17, weight='bold')
 plt.tight_layout()
 save_figure(plt, f'{model}_{experiment}_{member}_tailwidths_{sig}', 'Maps')
 plt.show()

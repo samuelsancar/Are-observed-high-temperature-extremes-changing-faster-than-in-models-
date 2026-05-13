@@ -33,7 +33,7 @@ def units_and_coords(cube):
     return cube
 
 # Beginning & end year+1
-t1 = 1980
+t1 = 1958
 t2 = 2023
 
 significant = sys.argv[1]  # Choose from 'positive' or 'all', 
@@ -253,7 +253,7 @@ plt.text(
 
 plt.xlabel('Area of significant trends (\u00D710\u00B9\u00B2 m\u00B2)', fontsize=18, fontweight='bold')
 plt.ylabel('Frequency', fontsize=18, fontweight='bold')
-plt.title(f'HRMIP area distribution of significant {graph_name} ', fontsize=20, fontweight='bold')
+plt.title(f'a) HRMIP area distribution of significant {graph_name} ', fontsize=20, fontweight='bold')
 
 plt.xticks(fontsize=15)
 plt.yticks(fontsize=15)

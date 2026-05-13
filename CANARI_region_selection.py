@@ -44,7 +44,7 @@ def pass_conditions(member1):
     member1_trend_1980 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{member1}_tailwidth_trend_{t1}-{t2-1}.nc')
     member1_1980_masked, _ = lat_land_mask(member1_trend_1980, template, lat_minimum, lat_maximum)
     
-    #member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/FDR_corrections_All/{member1}_tailwidths_p_1958_fdr_significant_all.nc')
+    #member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/FDR_corrections/{member1}_fdr_corrected_p_{t1}-{t2-1}.nc')
     member1_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/{member1}_p_{t1}-{t2-1}.nc')
     
     member1_masked = guess_bounds(member1_masked)
@@ -98,7 +98,7 @@ if variable == 'iterate':
     member_passes_array = np.array(member_passes)
     era5 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_{t1}-{t2-1}.nc')
     era5_masked, _ = lat_land_mask(era5, template, lat_minimum, lat_maximum)       
-    #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_corrected_p_{t1}-{t2-1}.nc')
+    #era5_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_positive_fdr_corrected_p_{t1}-{t2-1}.nc')
     era5_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_{t1}-{t2-1}.nc')
 
     era5_agreement = np.load(f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_agreement/Model_agreement/CANARI_ERA5_agreement_field.npy') #CANARI_ERA5_gridpoint_fractions.npy
@@ -173,7 +173,7 @@ if variable == 'iterate':
     plt.ylabel('Frequency', fontsize=21)
     plt.xticks(fontsize=19)
     plt.yticks(fontsize=19)
-    plt.title('Distribution of area passing all conditions', fontsize=22, fontweight='bold')
+    plt.title('e) Distribution of area passing all conditions', fontsize=22, fontweight='bold')
     plt.grid(True, linestyle='--', alpha=0.5, linewidth=1.2)
     plt.legend(fontsize=19)
     plt.tight_layout()
@@ -191,7 +191,7 @@ else:
         
         era5 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_{t1}-{t2-1}.nc')
         era5_masked, _ = lat_land_mask(era5, template, lat_minimum, lat_maximum)       
-        #era5_sig = iris.load_cube('/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_fdr_all_{t1}-{t2-1}.nc')
+        #era5_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_positive_fdr_corrected_p_{t1}-{t2-1}.nc')
         era5_sig = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_p_{t1}-{t2-1}.nc')
 
         era5_agreement = np.load(f'/home/users/samuel.sancar/Documents/Temperature_extremes/Model_agreement/CANARI_ERA5_gridpoint_fractions.npy')
@@ -218,7 +218,7 @@ else:
         
         plt.figure(figsize=(12,6))
         ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
-        ax.set_extent([-180, 180, lat_minimum, 80], crs=ccrs.PlateCarree(central_longitude=0))
+        ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
         
         for spine in ax.spines.values():
             spine.set_linewidth(3)   
@@ -238,7 +238,7 @@ else:
         cb.set_label('Number of conditions true', fontsize=13)
 
         # Compute midpoints for tick positions
-        #midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
+        midpoints = [(bounds[i] + bounds[i+1]) / 2 for i in range(len(bounds)-1)]
 
         cb.set_ticks(midpoints)
         cb.ax.tick_params(labelsize=12)
@@ -262,7 +262,7 @@ else:
             spine.set_linewidth(3)  
             spine.set_edgecolor('black')
     
-        ax.set_extent([-180, 180, lat_minimum, lat_maximum], crs=ccrs.PlateCarree(central_longitude=0))
+        ax.set_extent([-180, 180, lat_minimum, 90], crs=ccrs.PlateCarree(central_longitude=0))
         ax.coastlines()
         ax.add_feature(cfeature.LAND, facecolor='lightgray')
         ax.add_feature(cfeature.OCEAN, facecolor='white', zorder = 3)
@@ -282,6 +282,6 @@ else:
         #cb.set_ticks(midpoints)
         #cb.ax.tick_params(labelsize=15)
         #cb.set_ticklabels(['0', '1', '2', '3', '4'])
-        plt.title(f'CANARI-LE member {member1}', fontsize=18, fontweight='bold')
+        plt.title(f'f) CANARI-LE member {member1}', fontsize=18, fontweight='bold')
         save_figure(plt, f'CANARI_member_{member1}_region_selection', 'Maps')
         plt.show()

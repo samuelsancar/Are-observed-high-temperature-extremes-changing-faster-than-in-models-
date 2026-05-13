@@ -124,7 +124,7 @@ if member.lower() == "era5":
     #cbar.set_ticklabels(['0', '5', '25', '75', '95', '100'])
     #cbar.set_label(f'Percent of CANARI-LE ensemble member trends less than ERA5 [%]', fontsize=11)
     
-    plt.title(f'ERA5', fontsize=22, weight='bold')
+    plt.title(f'a) ERA5', fontsize=22, weight='bold')
     plt.tight_layout()
     save_figure(plt, "ERA5_percentile_map", "Maps")
     plt.show()
@@ -189,13 +189,13 @@ else:
         ax.add_feature(cfeature.OCEAN, facecolor="aliceblue")
 
                 
-        cbar = plt.colorbar(c,ax=ax,orientation='horizontal',pad=0.05,aspect=50,extend='both')
+        cbar = plt.colorbar(c, ax=ax, orientation='horizontal', pad=0.05, aspect=50, extend='both')
 
         cbar.set_ticklabels(['0', '5', '25', '75', '95', '100'])
         cbar.ax.tick_params(labelsize=16)
         cbar.set_label(f'Percent of CANARI-LE trends less than member [%]', fontsize=18)
         
-        plt.title(f'CANARI-LE member {model_name}', fontsize=22, weight='bold')
+        plt.title(f'd) CANARI-LE member {model_name}', fontsize=22, weight='bold')
         plt.tight_layout()
         save_figure(plt, f'{model_name}_percentile_map', 'Maps')
         plt.show()

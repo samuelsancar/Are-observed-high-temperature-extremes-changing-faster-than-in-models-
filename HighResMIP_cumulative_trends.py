@@ -54,6 +54,7 @@ reanalysis = 'era5'
 variable = 'daily_maximum_2m_temperature'
 jra = 'jra55'
 variable_jra = '_minmax_surf.015_tmax.reg_tl319.'
+merra = 'MERRA'
 
 template = iris.load_cube('template_cube_1deg.nc')
 
@@ -70,6 +71,14 @@ trend_jra = iris.load_cube(f"{datadir_jra}{jra}_{variable_jra}_tailwidth_trends_
 jra_trend, _ = lat_land_mask(trend_jra, template, lat_minimum, lat_maximum)
 
 jra_data, jra_weights = extract_data_and_weights(jra_trend)
+
+# Load MERRA2 trend data
+if t1 == 1980:
+    datadir_merra = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
+    merra_trend = iris.load_cube(f"{datadir_merra}{merra}_{variable}_tailwidth_trends_{t1}-{t2-1}.nc")
+    merra_trend, _ = lat_land_mask(merra_trend, template, lat_minimum, lat_maximum)
+
+    merra_data, merra_weights = extract_data_and_weights(merra_trend)
 
 # Read in excel sheet containing model names
 df = pd.read_excel("/data/users/samuel.sancar/Model_table.xlsx", sheet_name='Model Stack', engine="openpyxl")
@@ -118,8 +127,11 @@ ax = plt.gca()
 for spine in ax.spines.values():
     spine.set_linewidth(2)
     
-plt.hist(era5_data, weights=era5_weights, density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3.5, label='ERA5') #, linestyle='-'
-plt.hist(jra_data, weights=jra_weights, density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3.5, linestyle='-.', label='JRA-55')#/10**13
+plt.hist(era5_data, weights=era5_weights, density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3, label='ERA5') #, linestyle='-'
+plt.hist(jra_data, weights=jra_weights, density= False, cumulative =-1, bins=bins, histtype='step', color='black', linewidth=3, linestyle='-.', label='JRA-55')#/10**13
+
+if t1 == 1980:
+    plt.hist(merra_data, weights = merra_weights, density = False, cumulative = -1, bins=bins, histtype='step', color= "blue", linewidth=3, linestyle = '-.', label='MERRA-2')
 
 plt.xlabel('Tail width trend (°C per Decade)', fontsize=18, fontweight='bold')
 plt.xticks(fontsize = 16)
@@ -129,13 +141,12 @@ plt.ylabel(f'Cumulative area (m\u00B2)', fontsize=18, fontweight='bold') #\u00D7
 plt.yscale('log')
 plt.yticks(fontsize = 16)
 
-plt.title('Tail width trend cumulative area distributions', fontsize=20, fontweight='bold')
+plt.title('b) Tail width trend cumulative area distributions', fontsize=20, fontweight='bold')
 plt.legend(loc='upper right', fontsize=18)
 plt.grid(True, linestyle='--', alpha=0.6)
 plt.tight_layout()
-save_figure(plt, 'Tail_width_trend_cumulative_distributions', 'Graphs')
+save_figure(plt, f'Tail_width_trend_cumulative_distributions({t1}-{t2-1})', 'Graphs')
 plt.show()
-
 
 # Strongest positive ERA5 tail-width trend within -60 to 80
 era5_max_trend = np.nanmax(era5_data)

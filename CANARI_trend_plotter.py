@@ -19,7 +19,6 @@ import cartopy.crs as ccrs
 import matplotlib.cm as mpl_cm
 import datetime
 import numpy as np
-import xarray as xr
 from Lat_Land_mask_function import lat_land_mask
 from Map_features import map_features
 from Save_figure_function import save_figure
@@ -67,13 +66,13 @@ lon2d, lat2d = np.meshgrid(lon, lat)
 # Load significance mask (already masked for land and latitude)
 if sig == 'fdr':
     sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/FDR_corrections/'
-    statsig = iris.load_cube(f"{sig_datadir}{member}_fdr_corrected_p_1958-2022.nc")
+    statsig = iris.load_cube(f"{sig_datadir}{member}_fdr_corrected_p_{t1}-{t2-1}.nc")
     data = statsig.data  # masked array
     stipple_mask = (~data.mask) & data.astype(bool)
     stipple_lats, stipple_lons = lat2d[stipple_mask], lon2d[stipple_mask]
 else:
     sig_datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/Trend_significance/CANARI/P-vals/'
-    statsig = iris.load_cube(f"{sig_datadir}{member}_tailwidth_p_{t1}-{t2-1}.nc")
+    statsig = iris.load_cube(f"{sig_datadir}{member}_p_{t1}-{t2-1}.nc")
     statsig_masked, _ = lat_land_mask(statsig, template, lat_minimum, lat_maximum)
     sig_mask_np = np.ma.filled(statsig_masked.data < alpha, False)
     stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
@@ -93,11 +92,11 @@ map_features('Detail', ax, lat_minimum, lat_maximum)
 
 map = iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
-# Overlay white dots where p87p5_trend is negative
-ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
+# Plot significant trends
+ax.scatter(stipple_lons, stipple_lats, color='black', s=0.6, alpha=0.6, transform=ccrs.PlateCarree(), label='Stippling')
 
-# Plot stippling
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.4, alpha=0.5, transform=ccrs.PlateCarree(central_longitude=0), label='Stippling')
+# Pot white stippling where p87p5_trend is negative
+ax.scatter(neg_lons, neg_lats, color="grey", s=0.6, alpha=0.6, marker = 's', transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
 # Add colourbar
 cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
@@ -110,13 +109,11 @@ save_figure(plt, f'CANARI_{member}_tailwidths_p', 'Maps')
 plt.show()
 
 # Load full tail width data with time dimension
-datadir = f'/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari/'
-full_data_filename = f"{member}_tailwidths_{t1}-{t2-1}.nc "
-full_cube = iris.load_cube(datadir + full_data_filename)
+full_cube = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari/{member}_tailwidths_{t1}-{t2-1}.nc')
 
 # Choose a grid point (default is over London)
 lat_index = 55
-lon_index =37
+lon_index = 37
 
 longitudes = cube.coord('longitude')
 latitudes = cube.coord('latitude')
@@ -132,11 +129,6 @@ lat_box1 = latitudes1.nearest_neighbour_index(lon_index)
 
 # Extract time series and time points
 time_series = full_cube.data[:, lat_box1, lon_box1]
-time_coord = full_cube.coord('time')
-time_points = time_coord.units.num2date(time_coord.points)
-
-# Convert cftime.DatetimeProlepticGregorian to datetime.datetime
-converted_time_points = [datetime.datetime(tp.year, tp.month, tp.day) for tp in time_points]
 
 # Extract trend value from masked_cube
 trend = cube.data[lon_box, lon_box]
@@ -146,7 +138,7 @@ trend_line = trend/10 * np.arange(len(time_series)) + time_series[0]
 
 # Plot the time series and trend line
 plt.figure(figsize=(10, 5))
-plt.plot(converted_time_points, time_series, marker='o', linestyle='-', label='Tail Width')
+plt.plot(np.arange(1958,2023), time_series, marker='o', linestyle='-', label='Tail Width')
 
 plt.title(f"Tail Width Over Time for CANARI member {member} at Grid Point ({lat_index}, {lon_index})", fontsize=14)
 plt.xlabel("Time")

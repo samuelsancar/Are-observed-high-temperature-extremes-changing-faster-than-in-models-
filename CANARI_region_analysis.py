@@ -26,9 +26,9 @@ from Lat_Land_mask_function import lat_land_mask
 from Map_features import map_features
 
 def index_to_letters(i: int) -> str:
-    alphabet = string.ascii_uppercase
+    alphabet = string.ascii_lowercase
     s = ""
-    n = i
+    n = i + 1   
     while True:
         n, r = divmod(n, 26)
         s = alphabet[r] + s
@@ -64,7 +64,7 @@ CANARI_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends
 #reglons = [[-16, -7], [111, 116], [44, 49], [-86, -75]]
 
 # Regions and title from member 29
-regtitles = ['A. Patagonia', 'B. Central Argentina', 'C. DRC' , 'D. Zimbabwe', 'E. Ireland', 'F. Belarus', 'G. Nepal', 'H. NW Siberia']
+regtitles = ['b. Patagonia', 'c. Central Argentina', 'd. DRC' , 'e. Zimbabwe', 'f. Ireland', 'g. Belarus', 'h. Nepal', 'i. NW Siberia']
 reglats = [[-56, -42.5], [-34.5, -22], [-5.5, 1], [-20.5, -11], [50.5, 57.5], [48, 54], [29.5, 34.5], [57.5, 64.5]]
 reglons = [[-76.5, -65.5], [-68.5, -60], [13.5, 22.5], [24.5, 36.5], [-10.5, -1.5], [24.5, 34.5], [81.5, 89.5], [128, 145.5]]
 
@@ -99,14 +99,11 @@ stipple_lats, stipple_lons = lat2d[sig_mask_np], lon2d[sig_mask_np]
 
 # Plot tailwidth trend
 fig = plt.figure(figsize=(12, 6))
-ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=0))
+ax = plt.axes(projection=ccrs.Robinson(central_longitude=0))
 
 map_features('Detail', ax, lat_minimum, lat_maximum)
 
 map = iplt.pcolormesh(masked_cube, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
-
-# Overlay negative trend points
-ax.scatter(neg_lons, neg_lats, color='white', s=0.9, alpha=0.6, transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
 # For plotting label
 offset_pts = 3
@@ -134,13 +131,16 @@ for i, (title, lat_range, lon_range) in enumerate(zip(regtitles, reglats, reglon
         path_effects=[pe.withStroke(linewidth=2, foreground='white')]
     )
 
-# Plot stippling for significant trends
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.5, alpha=0.6, transform=ccrs.PlateCarree(), label='Significant')
+# Plot significant trends
+ax.scatter(stipple_lons, stipple_lats, color='black', s=0.6, alpha=0.6, transform=ccrs.PlateCarree(), label='Stippling')
+
+# Pot white stippling where p87p5_trend is negative
+ax.scatter(neg_lons, neg_lats, color="white", s=0.6, alpha=0.6, marker = 's', transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
 cbar = plt.colorbar(map, orientation='horizontal', pad=0.05, aspect=50)
 cbar.set_label('Trend in Tail width (°C per decade)', fontsize=13)
 
-plt.title(f"CANARI-LE member {member} tail width trends ({t1}-{t2-1})", fontsize=15, weight='bold')
+plt.title(f"a) CANARI-LE member {member} tail width trends ({t1}-{t2-1})", fontsize=15, weight='bold')
 plt.tight_layout()
 save_figure(plt, f'CANARI_{member}_tailwidths_p', 'Maps')
 plt.show()
