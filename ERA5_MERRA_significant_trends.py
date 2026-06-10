@@ -1,5 +1,11 @@
 """
+05/03/2026
+-----------
+
 Code to plot where ERA5 and MERRA significant trends agree.
+Plots figures S3a and S3b in supplementarial material.
+
+To run: python ERA5_MERRA_significant_trends.py [fdr|pvals]
 """
 
 import iris
@@ -78,7 +84,7 @@ ax.scatter(
     both_lon, both_lat, color="#ff1e22", marker='o', s=10, alpha=1,transform=ccrs.PlateCarree(), label='Both')
 
 ax.scatter(
-    era5_only_lon, era5_only_lat,  marker='s', s=4, alpha=0.6, facecolors='black',edgecolors='white', linewidths=0.5,transform=ccrs.PlateCarree(), label='ERA5')
+    era5_only_lon, era5_only_lat,  marker='s', s=4, alpha=0.7, facecolors='black',edgecolors='white', linewidths=0.5,transform=ccrs.PlateCarree(), label='ERA5')
 
 ax.scatter(
     merra_only_lon, merra_only_lat, marker='s', s=4, alpha=0.5,facecolors='blue',edgecolors='white', linewidths=0.5,transform=ccrs.PlateCarree(), label='MERRA2')

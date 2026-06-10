@@ -1,13 +1,12 @@
 """
 10/08/2025
-------
+----------
 
- Function to calculate flase discovery rate corrected p-values using the Benjamin hochberg method.
- p-values are obtained using the Kendall-Tau non-parametric test.
+Functions to calculate flase discovery rate corrected p-values using the Benjamin hochberg method.
+p-values are obtained using the Kendall-Tau non-parametric test.
 
- Returns: stipple_lats, stipple_lons, corrected_pvals, rejected
-
- """
+Returns: stipple_lats, stipple_lons, corrected_pvals, rejected
+"""
  
 import iris
 import numpy as np

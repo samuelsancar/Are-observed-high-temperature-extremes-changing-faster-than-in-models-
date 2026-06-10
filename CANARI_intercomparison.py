@@ -1,8 +1,13 @@
 """
 13/11/2025
 ----------
+
 CANARI intercomparison: Loops through each member, and calculates at each grid point, 
 what percentile in the ensemble spread said grid point lies.
+
+Used to plot figure 3a-d in the paper. Can plot for any member (ERA5 or CANARI) against the rest of the ensemble.
+
+To run: python CANARI_intercomparison [<member_no.>|era5]
 """
 
 import iris

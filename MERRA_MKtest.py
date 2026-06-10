@@ -1,6 +1,11 @@
 """
+20/01/2026
+----------
+
 Code that applies MannKendall test on yearly MERRA2 tailwidths.
 Output is KendallTau and p-values (for all trends and positive only trends).
+
+To run: python MERRA_MKtest.py
 """
 
 import numpy as np

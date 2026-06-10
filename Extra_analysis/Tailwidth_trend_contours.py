@@ -1,5 +1,10 @@
 """ 
+10/12/2025
+----------
+
 Code to plot contour plots of obs and model data.
+
+To run: Tailwidth_trend_contours.py
 """
 
 import iris

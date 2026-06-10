@@ -1,8 +1,11 @@
 """
-    Function to apply land and latitude mask to 2D iris cubes or 3D iris cubes/lists. Boundaries of latitude mask can be chosen.
-    Function also applies mask for trends where the 87.5th quantile is decreasing.
+15/07/2025
+----------
 
-    Returns masked_cube, no_of_gridpoints
+Function to apply land and latitude mask to 2D iris cubes or 3D iris cubes/lists. Boundaries of latitude mask can be chosen.
+Function also applies mask for trends where the 87.5th quantile is decreasing.
+
+Returns masked_cube, no_of_gridpoints
 """
 
 import numpy as np

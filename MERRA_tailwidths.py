@@ -1,7 +1,10 @@
 """
 15/01/2026
 ----------
+
 Code to calculate annual tail width (p99-p87.5) from MERRA2 tasmax derived from hourly instantaneous temperature.
+
+To run: python MERRA_tailwidths.py
 """
 
 import iris

@@ -1,5 +1,10 @@
 """
+12/02/2026
+----------
+
 Code to find spatial correlation between JRA-55 and ERA5.
+
+To run: python ERA5_JRA-55_correlation.py
 """
 
 import os

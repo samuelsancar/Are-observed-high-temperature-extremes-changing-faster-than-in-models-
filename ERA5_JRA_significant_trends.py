@@ -1,5 +1,11 @@
 """
+20/01/2026
+----------
+
 Code to plot where ERA5 and JRA-55 significant trends occur.
+Plots figures 5a and 5b int the paper.
+
+To run: python ERA5_JRA_significant_trends.py [fdr|pvals]
 """
 
 import iris
@@ -79,13 +85,13 @@ ax.coastlines()
 # Plot significant trends
 ax.scatter(both_lon, both_lat, color="#ff1e22", marker='o', s=10, alpha=1,transform=ccrs.PlateCarree(), label='Both')
 
-ax.scatter(era5_only_lon, era5_only_lat, marker='s', s=4, alpha=0.6, facecolors='black',edgecolors='white', linewidths=0.5,transform=ccrs.PlateCarree(), label='ERA5')
+ax.scatter(era5_only_lon, era5_only_lat, marker='s', s=4, alpha=0.7, facecolors='black',edgecolors='white', linewidths=0.5,transform=ccrs.PlateCarree(), label='ERA5')
 
 ax.scatter(jra_only_lon, jra_only_lat, marker='s', s=4, alpha=0.5,facecolors='blue',edgecolors='white', linewidths=0.5,transform=ccrs.PlateCarree(), label='JRA-55')
 
 ax.set_extent([-135, 160, -60, 80], crs=ccrs.PlateCarree())
 
-plt.title(f"b) ERA5 and JRA-55 significant trends ({t1}-{t2-1})", fontsize=17, weight='bold')
+plt.title(f"b) ERA5 and JRA-55 FDR corrected significant trends ({t1}-{t2-1})", fontsize=17, weight='bold')
 
 import matplotlib.patches as mpatches
 handles = [

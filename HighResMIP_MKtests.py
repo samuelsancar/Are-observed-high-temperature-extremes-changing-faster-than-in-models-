@@ -1,6 +1,11 @@
 """
+10/08/2025
+----------
+
 Code that applies MannKendall test on HighResMIP tail widths.
 Output is KendallTau and p-values (for all trends and positive only trends).
+
+To run: python HighResMIP_MKtests.py
 """
 
 import iris

@@ -1,7 +1,12 @@
 """
-    Code to calculate linear trends in HighResMIP daily tasmax tailwidths. 
-    Model member names are imported from the Model_table.xlsx file. 
-    The code loads the stacked tail width cubes created by HighResMIP_stack.py,
+30/07/2025
+----------
+
+Code to calculate linear trends in HighResMIP daily tasmax tailwidths. 
+Model member names are imported from the Model_table.xlsx file. 
+The code loads the stacked tail width cubes created by HighResMIP_stack.py,
+
+To run: python HighResMIP_trend_calc.py
 """
 
 import iris
@@ -11,7 +16,7 @@ from Trend_calculation_functions import (create_year_cube, maskp87p5, calculate_
 import pandas as pd
 
 # Beginning and end year+1
-t1 = 1980
+t1 = 1958
 t2 = 2023
 
 years = np.arange(t1, t2)

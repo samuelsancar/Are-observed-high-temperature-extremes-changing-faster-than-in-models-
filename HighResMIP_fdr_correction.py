@@ -1,10 +1,10 @@
 """
 22/09/25
 ---------
-Correcting for significant trends for false discovery rate  for HighResMIP members(alpha=0.1).
+
+Apply Benjamini Hochberg metthod to HighResMIP members to correct for false discovery rate (alpha=0.1).
 
 To run: python3 HighResMIP_FDR_correction.py
-
 """
 
 import numpy as np

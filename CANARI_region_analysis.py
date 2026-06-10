@@ -1,9 +1,13 @@
 """ 
 17/11/2025
 ----------
+
 CANARI regional analysis. Current set up of code is specific to CANARI member 29.
 Bounds for latitudes and longitudes to analyse over are determined by CANARI_regional_selection code.
-Boxes are determined based on regions considered as robust heatwave hot spots, passing all conditions, as specified in the methods.
+Boxes are determined based on regions considered as robust heatwave hot spots, passing all conditions, 
+as specified in the methods.
+
+To run: python CANARI_region_analysis.py [<member number>]
 """
 
 import iris
@@ -44,14 +48,11 @@ t2 = 2023
 lat_minimum = -60
 lat_maximum = 90
 
-member = sys.argv[1]
+member = int(sys.argv[1])
 
 template = iris.load_cube('template_cube_1deg.nc')
 era5 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/era5_daily_maximum_2m_temperature_tailwidth_trends_{t1}-{t2-1}.nc')
 jra55 = iris.load_cube(f'/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/jra55__minmax_surf.015_tmax.reg_tl319._tailwidth_trends_{t1}-{t2-1}.nc')
-
-# Load CANARI files
-CANARI_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/*_tailwidth_trend_{t1}-{t2-1}.nc'))
 
 # Regions and titles for member 32
 #regtitles = ['Northeast United States', 'Southwest Canada', 'Southeast Brazil', 'Paraguay', 'Northwest Africa', 'Eastern Central China', 'Northeast Russia'] # , 'Northern Summatra'
@@ -64,7 +65,7 @@ CANARI_files = sorted(glob.glob(f'/data/users/samuel.sancar/Heat_extremes/Trends
 #reglons = [[-16, -7], [111, 116], [44, 49], [-86, -75]]
 
 # Regions and title from member 29
-regtitles = ['b. Patagonia', 'c. Central Argentina', 'd. DRC' , 'e. Zimbabwe', 'f. Ireland', 'g. Belarus', 'h. Nepal', 'i. NW Siberia']
+regtitles = ['b. Patagonia', 'c. Northern Argentina', 'd. DRC' , 'e. SE Africa', 'f. Britain and Ireland', 'g. Eastern Europe', 'h. Nepal', 'i. NW Siberia']
 reglats = [[-56, -42.5], [-34.5, -22], [-5.5, 1], [-20.5, -11], [50.5, 57.5], [48, 54], [29.5, 34.5], [57.5, 64.5]]
 reglons = [[-76.5, -65.5], [-68.5, -60], [13.5, 22.5], [24.5, 36.5], [-10.5, -1.5], [24.5, 34.5], [81.5, 89.5], [128, 145.5]]
 
@@ -172,9 +173,6 @@ years = np.arange(t1, t2)
 positions = [1,2]
 labels = ['CANARI-LE', 'Reanalyses']
 
-# Load CANARI member cubes
-member_cubes = [(iris.load_cube(fname), fname) for fname in CANARI_files]
-
 all_trends = []
 region_pvals = []
 percentiles  = []
@@ -191,6 +189,9 @@ first_line_ax = None
 
 # Iterate over all regions 
 for i, region_name in enumerate(regtitles):
+    
+    print(f'Processing region {region_name}')
+    
     if i <= 3:
         ax_box  = axes[0, i]  
     else:
@@ -206,21 +207,20 @@ for i, region_name in enumerate(regtitles):
     pseudo_obs  = None
 
     #Plot CANARI members (lines) and collect trends for box 
-    for trend_cube, fname in member_cubes:
-        member_name = fname.split('/')[-1].split('_')[0]
+    for member_name in np.arange(1, 41):
 
-        # Land-sea mask
-        trend_cube.data = np.ma.masked_where(lsm_interp.values <= 0.5, trend_cube.data)
-
+        print(f'Processing {member_name} for region {region_name}')
+        
         # Regional series and trend
         region_series = regional_tailwidths(member_name, reglats[i], reglons[i], lat_minimum, lat_maximum, t1, t2)
         avg_trend     = regional_trends(region_series)  
-
+        
         if np.size(avg_trend) != 0:
-            # Line for fitted trend across years
-            fit_line = avg_trend / 10.0 * (years - years[0])  
-            trend_array.append(avg_trend)
-            all_trends.append(avg_trend)
+            if member_name != member:
+                # Line for fitted trend across years
+                fit_line = avg_trend / 10.0 * (years - years[0])  
+                trend_array.append(avg_trend)
+                all_trends.append(avg_trend)
 
             if member_name == member:
                 # Mann-Kendall p-value for the series

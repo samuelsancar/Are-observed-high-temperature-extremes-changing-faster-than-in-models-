@@ -4,6 +4,7 @@
 
 Code to calculate CANARI large ensemble (n=40) tail widths (p99-p87.5) in daily tasmax.
 
+To run: python CANARI_tailwidths.py
 """
 
 import iris

@@ -1,4 +1,7 @@
 """
+27/01/2026
+----------
+
 Plot trend in tail width calculated by MERRA_trend_calc.py
 
 Note: ERA5 significant trends are calculated in MERRA_MKtest.py and saved as netCDF files. These must be calculated first for code to work. 

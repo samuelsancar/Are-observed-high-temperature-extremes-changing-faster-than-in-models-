@@ -1,3 +1,12 @@
+''''
+15/03/2026
+----------
+
+Plot location of CANARI tail width trends above a certain threshold, and compare with ERA5.
+
+To run: python CANARI_tailwidth_threshold.py
+'''
+
 import iris 
 import numpy as np 
 import pandas as pd

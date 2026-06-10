@@ -1,5 +1,10 @@
 """
-    Code to calculate linear trends in ERA5 daily tasmax tailwidths.
+17/01/2026
+----------
+
+Code to calculate linear trends in ERA5 daily tasmax tailwidths.
+
+To run: python MERRA_trend_calc.py
 """
 
 import iris

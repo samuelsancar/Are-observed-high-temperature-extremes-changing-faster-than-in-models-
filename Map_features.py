@@ -1,10 +1,8 @@
 """
-    Function for map plotting details:
+Function for map plotting details:
     
-    Detailed: More detailed map.
-    [anything]: Simpler map details.
-
-    
+Detailed: More detailed map.
+[anything]: Simpler map details.  
 """
 
 import matplotlib.pyplot as plt

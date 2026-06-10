@@ -4,7 +4,7 @@
 
 Histogram of FDR correction for tailwidth trends for all models, ERA5 and JRA-55 Reanlysis data.
 
-To run: python Model_FDR_histogram.py
+To run: python Model_FDR_histogram.py [all|positive]
 """
 
 import iris
@@ -40,6 +40,7 @@ significant = sys.argv[1]  # Choose from 'positive' or 'all',
 
 era5 = 'era5'
 merra = 'MERRA'
+berkeley = 'BerkeleyEarth'
 jra = f'jra55__minmax_surf.015_tmax.reg_tl319.'
 variable = 'daily_maximum_2m_temperature'
 
@@ -60,6 +61,7 @@ datadir = '/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/'
 
 era5_cube = iris.load_cube(f"{datadir}{era5}_{variable}{selection}")
 jra_cube = iris.load_cube(f"{datadir}{jra}{selection}")
+berkeley_cube = iris.load_cube(f"{datadir}{berkeley}_{variable}{selection}")
 
 if t1 == 1980:
     merra_cube = iris.load_cube(f"{datadir}{merra}_{variable}{selection}")
@@ -172,9 +174,36 @@ if t1 == 1980:
     both_merra_area_weights = iris.analysis.cartography.area_weights(both_merra_sig_cube)
     
     both_merra_sig_area = both_merra_sig_cube.collapsed(['latitude', 'longitude'], iris.analysis.SUM, weights=both_merra_area_weights).data
-    
-# JRA-55 and ERA5 agreed sig points
 
+# BerkeleyEarth
+berkeley_cube = units_and_coords(berkeley_cube)
+
+# Boolean significance mask
+berkeley_sig_mask = berkeley_cube.data.astype(bool)
+berkeley_sig_cube = berkeley_cube.copy()
+berkeley_sig_cube.data = berkeley_sig_mask.astype(int)
+sum_berkeley_sig_gridpoints = np.count_nonzero(berkeley_sig_mask)
+
+berkeley_area_weights = iris.analysis.cartography.area_weights(berkeley_sig_cube)
+
+# Area
+berkeley_sig_area = berkeley_sig_cube.collapsed(['latitude', 'longitude'],iris.analysis.SUM,weights=berkeley_area_weights).data
+
+# BerkeleyEarth and ERA5 agreed sig points
+eb_mask = era5_sig_mask & berkeley_sig_mask
+
+eb_sig_cube = berkeley_cube.copy()
+eb_sig_cube.data = eb_mask.astype(int)
+sum_eb_sig_gridpoints = np.count_nonzero(eb_mask)
+
+eb_area_weights = iris.analysis.cartography.area_weights(eb_sig_cube)
+
+# Area
+eb_sig_area = eb_sig_cube.collapsed(['latitude', 'longitude'],iris.analysis.SUM,weights=eb_area_weights).data
+
+sum_eb_sig_gridpoints = np.count_nonzero(eb_sig_cube)
+
+# JRA-55 and ERA5 agreed sig points
 both_mask = era5_sig_mask & jra_sig_mask
 
 both_sig_cube = jra_cube.copy()
@@ -234,22 +263,28 @@ counts, bins, patches = plt.hist(
 )
 
 plt.axvline(x=era5_sig_area, color='black', linestyle='-', linewidth=2.5, label='ERA5')
-
-# Label histogram at JRA-55 value
 plt.axvline(x=jra_sig_area, color='black', linestyle='--', linewidth=2.5, label='JRA-55')
+#plt.axvline(x=berkeley_sig_area, color='blue', linestyle='-', linewidth=2.5, label='BerkeleyEarth')
 
 if t1 == 1980:
     
     plt.axvline(x=merra_sig_area, color='#1B998B', linestyle='--', linewidth=2.5, label='MERRA')
     plt.axvline(x=both_merra_sig_area, color='#1B998B', linestyle='-.', linewidth=2.5, label='ERA5 MERRA agreement')
     
-# Label histogram at JRA-55 value
+
 plt.axvline(x=both_sig_area, color="black", linestyle='-.', linewidth=2.5)
 plt.text(
         both_sig_area + 50, max(counts) * 0.82, 'ERA5 & JRA-55 agreement',
         color='black', fontsize=15, fontweight='bold',
         bbox=dict(facecolor='white', edgecolor='black', boxstyle='round' ,pad=0.3, alpha=0.8)
     )
+
+#plt.axvline(x=eb_sig_area, color="blue", linestyle='-.', linewidth=2.5)
+#plt.text(
+#        eb_sig_area + 50, max(counts) * 0.82, 'ERA5 & BerkeleyEarth agreement',
+#        color='black', fontsize=15, fontweight='bold',
+#        bbox=dict(facecolor='white', edgecolor='black', boxstyle='round' ,pad=0.3, alpha=0.8)
+#    )
 
 plt.xlabel('Area of significant trends (\u00D710\u00B9\u00B2 m\u00B2)', fontsize=18, fontweight='bold')
 plt.ylabel('Frequency', fontsize=18, fontweight='bold')

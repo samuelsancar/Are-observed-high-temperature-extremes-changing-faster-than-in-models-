@@ -16,6 +16,7 @@ It will automatically select the correct file for each year.
 Note_4: The code saves yearly tail width and p87.5 cubes separately for each year, model, experiment, and member. 
 Directories are created for each institution under the Tailwidthslist directory.
 
+To run: HighResMIP_tailwidths.py
 """
 
 import iris
@@ -38,7 +39,7 @@ def file_covers_year(file_path, year):
         end_date = datetime.datetime.strptime(end_str, '%Y%m%d')
         return start_date.year <= year <= end_date.year
     except Exception as e:
-        print(f"Failed to parse date from {file_path}: {e}")
+        print(f"Failed to find date from {file_path}: {e}")
         return False
 
 def get_yearly_cube(y, model, experiment, member, datadir, future_expt):

@@ -1,9 +1,10 @@
 """
+1/12/2025
+----------
 
- Code to calculate and plot model agreement intercomparison.
+Code to calculate and plot model agreement intercomparison.
  
- To run: python Model_intercomparison.
- 
+To run: python HighResMIP_intercomparison.
 """
 
 import iris

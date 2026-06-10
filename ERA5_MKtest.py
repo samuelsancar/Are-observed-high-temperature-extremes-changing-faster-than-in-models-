@@ -1,8 +1,11 @@
 """
 24/07/25
 ---------
+
 Code that applies MannKendall test on yearly ERA5 tailwidths.
 Output is KendallTau and p-values (for all trends and positive only trends).
+
+To run: python ERA5_MKtest.py 
 """
 
 import numpy as np

@@ -1,3 +1,12 @@
+''''
+14/03/2026
+----------
+
+Plot location of ERA5 tail width trends above a certain threshold.
+
+To run: python ERA5_tailwidth_threshold.py
+'''
+
 import iris 
 import numpy as np 
 import pandas as pd

@@ -1,5 +1,10 @@
 """
+21/01/2026
+----------
+
 Code to calculate FDR correction for trends in tailwidths for JRA-55 reanalysis data.
+
+To run: python MERRA_fdr_correction.py
 """
 
 import iris

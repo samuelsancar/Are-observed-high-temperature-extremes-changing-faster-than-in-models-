@@ -1,10 +1,10 @@
 """
 07/11/25
 ---------
+
 Code to calculate standard deviation in model trands for daily tasmax tailwidths.
 
-To run: python Model_std.py
-
+To run: python HighResMIP_std&mean.py
 """
 
 import iris

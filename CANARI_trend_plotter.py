@@ -1,14 +1,13 @@
 """
-
 04/11/25
+----------
 
-Plot land_trends in tail width calculated by CANARI_trends.py.
+Plot tail width trends calculated by CANARI_trends.py.
 Note: CANARI significant trends are calculated in CANARI_MKtest.py and saved as netCDF files. These must be calculated first for code to work. 
 These are loaded here to add stippling to the trend map.
 
 To run: 'python CANARI_trend_plotter.py [member] [fdr|p]' where fdr or p determines whether to use the 
 FDR-corrected significance mask or the raw p-value mask for stippling.
-
 """
 
 import iris

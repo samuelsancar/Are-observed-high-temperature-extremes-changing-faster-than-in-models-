@@ -1,5 +1,10 @@
 """
-Code to calculate correlation between ERA5 and JRA-55
+10/02/2026
+----------
+
+Code to calculate correlation in tail width trends between ERA5 and JRA-55
+
+To run: python ERA5_JRA-55_correlation.py
 """
 
 import iris
@@ -17,14 +22,17 @@ import iris.plot as iplt
 from iris.cube import CubeList
 from Trend_calculation_functions import create_time_coord, load_yearly_cubes, stack_cubes
 
+# Beginning and end year+1
+t1 = 1980
+t2 = 2023
+
 datadir = ['/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/', '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/']
 p87p5 = ['/data/users/samuel.sancar/Heat_extremes/JRA-55_tailwidths/', '/data/users/samuel.sancar/Heat_extremes/ERA5_tailwidths/']
 outdir = ['/data/users/samuel.sancar/Heat_extremes/Trends/Reanalysis_trends/']
 
 reanalysis = ['jra55_', 'era5']
 variable = ['minmax_surf.015_tmax.reg_tl319.', 'daily_maximum_2m_temperature']
-t1 = 1980
-t2 = 2023
+
 years = np.arange(t1, t2)
 
 def prepare_reanlysis(reanalysis, variable, datadir, p87p5):

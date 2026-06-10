@@ -1,7 +1,11 @@
 """
 13/11/2025
 ---------- 
+
 ERA5 tail width trends vs CANARI model trends.
+At each grid point, calculate the percentage of CANARI models with a tail width trend less than or equal to the ERA5 trend. 
+
+To run: python CANARI_agreement.py
 """
 
 import iris

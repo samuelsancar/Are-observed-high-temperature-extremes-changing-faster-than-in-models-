@@ -1,8 +1,10 @@
 """
 17/07/25
 ---------
+
 Code to merge monthly ERA5 data and calculate tail width (p99-p87.5) in daily tasmax.
 
+To run: ERA5_tailwidths.py
 """
 
 import iris

@@ -1,10 +1,11 @@
 """
-17/07/25
+20/08/25
 ---------
-Plot histogram in tail widths trends of HighResMIP, JRA-55, and ERA5 data.
 
+Plot histogram in tail widths trends of HighResMIP, JRA-55, and ERA5 data.
 Produces figure 2a.
 
+To run: python HighResMIP_trends_histograms.py
 """
 
 import iris
@@ -60,12 +61,13 @@ t1 = 1958
 t2 = 2023
 
 lat_minimum = -60
-lat_maximum = 80
+lat_maximum = 60
 
 reanalysis = 'era5'
 variable = 'daily_maximum_2m_temperature'
 jra = 'jra55'
 variable_jra = '_minmax_surf.015_tmax.reg_tl319.'
+Berkeley = 'BerkeleyEarth'
 
 if t1 == 1980:
     merra = 'MERRA'
@@ -85,6 +87,12 @@ trend_jra = iris.load_cube(f"{datadir_jra}{jra}_{variable_jra}_tailwidth_trends_
 jra_trend, _ = lat_land_mask(trend_jra, template, lat_minimum, lat_maximum)
 
 jra_data, jra_weights = extract_data_and_weights(jra_trend)
+
+# Load BerkeleyEarth trend data
+#trend_berkeley = iris.load_cube(f"{datadir}{Berkeley}_{variable}_tailwidth_trends_{t1}-{t2-1}.nc")
+#berkeley_trend, _ = lat_land_mask(trend_berkeley, template, lat_minimum, lat_maximum)
+
+#berkeley_data, berkeley_weights = extract_data_and_weights(berkeley_trend)
 
 # Load MERRA2 trend data
 if t1 == 1980:
@@ -143,10 +151,11 @@ for spine in ax.spines.values():
     spine.set_linewidth(2)
 
 plt.hist(era5_data, weights=era5_weights, bins=bins, range = (x_min, 1.2), density = True, histtype='step', color='black', linewidth=3, label='ERA5') #, linestyle='-'
-plt.hist(jra_data, weights=jra_weights, bins=bins, range = (x_min, 1.2), density = True, histtype='step', color='black', linewidth=3, linestyle='-.', label='JRA-55')
+plt.hist(jra_data, weights=jra_weights, bins=bins, range = (x_min, 1.2), density = True, histtype='step', color='blue', linewidth=3, linestyle='-.', label='JRA-55')
+#plt.hist(berkeley_data, weights=berkeley_weights, bins=bins, range = (x_min, 1.2), density = True, histtype='step', color='black', linewidth=3, linestyle = '-.',label='Berkeley') #, linestyle='-'
 
 if t1 == 1980:
-    plt.hist(merra_data, weights = merra_weights, bins=bins, range = (x_min, 1.2), density = True, histtype='step', color= "blue", linewidth=3, linestyle = '-.', label='MERRA-2')
+    plt.hist(merra_data, weights = merra_weights, bins=bins, range = (x_min, 1.2), density = True, histtype='step', color= "black", linewidth=3, linestyle = '-.', label='MERRA-2')
 
 plt.xlabel('Tail width trend (°C per Decade)', fontsize=17, fontweight='bold')
 plt.xticks(fontsize = 16)

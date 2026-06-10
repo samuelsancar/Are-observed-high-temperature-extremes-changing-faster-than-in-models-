@@ -1,7 +1,10 @@
 """
 10/11/25
 ---------
-Correcting for significant trends for false discovery rate for CANARI members(alpha=0.1).
+
+Bejnamini Hochberg method applied to p-values CANARI members to correct for false discovery rate (alpha=0.1).
+
+To run: python CANARI_fdr_correction.py
 """
 
 import numpy as np

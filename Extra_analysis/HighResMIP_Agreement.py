@@ -1,3 +1,13 @@
+"""
+13/11/2025
+---------- 
+
+ERA5 tail width trends vs HighResMIP model trends.
+At each grid point, calculate the percentage of HighResMIP models with a tail width trend less than or equal to the ERA5 trend. 
+
+To run: python HighResMIP_Agreement.py
+"""
+
 import iris
 import numpy as np
 import matplotlib.pyplot as plt

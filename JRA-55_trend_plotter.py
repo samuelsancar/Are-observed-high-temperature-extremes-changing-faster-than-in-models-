@@ -1,17 +1,16 @@
 """
-18/09/2025
+21/09/2025
 ----------
 
 Plot trend in tail width calculated by JRA-55_trend_calc.py
 
-Used to produces JRA-55 plot for figure 1. 
+Used to produces JRA-55 plot for figure 1b. 
 
 Note: JRA-55 significant trends are calculated in JRA-55_MKtest.py and saved as netCDF files. These must be calculated first for code to work. 
 These are loaded here to add stippling to the trend map.
 
 To run: 'python JRA-55_trend_plotter.py [fdr|p]' # where fdr or p determines whether to use the 
 FDR-corrected significance mask or the raw p-value mask for stippling.
-
 """
 
 import iris

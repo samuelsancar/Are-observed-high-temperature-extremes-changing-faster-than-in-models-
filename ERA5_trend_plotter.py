@@ -1,9 +1,10 @@
 """
 17/07/25
 ---------
+
 Plot trend in tail width calculated by ERA5_trend_calc.py
 
-Used to produce ERA5 plot for figure 1.
+Used to produce ERA5 plot for figure 1a.
 
 Note: ERA5 significant trends are calculated in ERA5_MKtest.py and saved as netCDF files. These must be calculated first for code to work. 
 These are loaded here to add stippling to the trend map.
@@ -92,14 +93,14 @@ map_features('Detail', ax, lat_minimum, lat_maximum)
 map = iplt.pcolormesh(model_mask, cmap=cmap_rb, vmin=-0.3, vmax=0.3)
 
 # Plot significant trends
-ax.scatter(stipple_lons, stipple_lats, color='black', s=0.6, alpha=0.6, transform=ccrs.PlateCarree(), label='Stippling')
+#ax.scatter(stipple_lons, stipple_lats, color='black', s=0.6, alpha=0.6, transform=ccrs.PlateCarree(), label='Stippling')
 
 # Pot grey stippling where p87p5_trend is negative
-ax.scatter(neg_lons, neg_lats, color="grey", s=0.4, alpha=0.6, marker = 's', transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
+#ax.scatter(neg_lons, neg_lats, color="grey", s=0.4, alpha=0.6, marker = 's', transform=ccrs.PlateCarree(), label='p87p5 trend < 0')
 
-#cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
-#cbar.ax.tick_params(labelsize=16)
-#cbar.set_label('Trend in Tail width (°C per decade)', fontsize=17)
+cbar = plt.colorbar(map, ax=ax, orientation='horizontal', pad=0.05, aspect=50)
+cbar.ax.tick_params(labelsize=16)
+cbar.set_label('Trend in Tail width (°C per decade)', fontsize=17)
 
 plt.title(f"a) ERA5", fontsize=17, weight='bold')
 plt.tight_layout()

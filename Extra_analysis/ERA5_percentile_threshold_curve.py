@@ -1,5 +1,10 @@
 """ 
+15/09/2025
+----------
+
 ERA5 percentile in distribution.
+
+To run: ERA5_percentile_threshold_curve.py
 """
 
 import iris

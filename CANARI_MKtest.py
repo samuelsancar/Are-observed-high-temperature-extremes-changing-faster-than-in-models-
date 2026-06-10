@@ -1,6 +1,11 @@
 """
+1/11/25
+---------
+
 Code that applies MannKendall test on CANARI tail widths.
 Output is KendallTau and p-values (for all trends and positive only trends).
+
+To run: python CANARI_MKtest.py
 """
 
 import iris

@@ -1,11 +1,10 @@
 """
-
 26/08/25
+--------
 
 Plot histogram for significant tail widths in Models and ERA5 trends. Land masks have already been applied to models.
 
-To run: python plot_tailwidth_trend.py [1958] [2023]
-
+To run: python plot_tailwidth_trend.py 
 """
 
 import iris
@@ -24,7 +23,7 @@ t1 = 1958
 t2 = 2023
 
 lat_minimum = -60
-lat_maximum = 90
+lat_maximum = 80
 
 significant = sys.argv[1]  # Choose from 'positive' or 'all', 
 

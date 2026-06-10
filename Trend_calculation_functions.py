@@ -1,6 +1,6 @@
 """
-    Functions to prepare iris cubes and calculate 
-    linear trends using pearson r coefficient.
+Functions to prepare iris cubes and calculate 
+linear trends using pearson r coefficient.
 """
 
 import os

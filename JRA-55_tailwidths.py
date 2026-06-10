@@ -5,6 +5,7 @@
 Code to aggregate JRA-55 3hourly diagnostic maximum temperature for daily maximum 2m temperature data, 
 and calculate annual tail width (p99-p87.5) in tasmax.
 
+To run: python JRA-55_tailwidths.py
 """
 
 import iris

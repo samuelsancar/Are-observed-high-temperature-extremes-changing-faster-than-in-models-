@@ -1,8 +1,10 @@
 """
 03/11/2025
 ----------
+
 Code to caluclate trends in tail widths and 87.5th percentiles for CANARI model data.
  
+To run: python CANARI_trend_calc.py 
 """
 
 import iris
@@ -38,7 +40,7 @@ def load_yearly_cubes(datadir, year, member):
             
     return cubes, p87p5_cubes
 
-for member in range(1, 41):
+for member in np.arange(1, 41):
 
     print(f'Processing member {member}')
     datadir = f'/data/users/samuel.sancar/Heat_extremes/Tail_widths/canari/member{member}/'

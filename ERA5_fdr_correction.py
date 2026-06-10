@@ -1,7 +1,10 @@
 """
 24/07/25
 ---------
+
 Apply Benjamini Hochberg method to correct for false discovery rate to ERA5 tail width trends (alpha=0.1).
+
+To run: python ERA5_fdr_correction.py
 """
 
 import iris

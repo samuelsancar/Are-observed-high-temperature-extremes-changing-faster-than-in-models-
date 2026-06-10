@@ -1,8 +1,13 @@
 """
-    Code to stack yearly HighResMIP tailwidths into one file per model member. 
-    Names of Model members are imported from the Model_table.xlsx file.
-    Stacked cubes are saved in the Tail_widths directory, 
-    with one file per model member containing the tail width for each year from 1958-2022.
+29/07/2026
+----------
+
+Code to stack yearly HighResMIP tailwidths into one file per model member. 
+Names of Model members are imported from the Model_table.xlsx file.
+Stacked cubes are saved in the Tail_widths directory, 
+with one file per model member containing the tail widths for each year from 1958-2022.
+
+To run: python HighResMIP_stack.py
 """
 
 import iris

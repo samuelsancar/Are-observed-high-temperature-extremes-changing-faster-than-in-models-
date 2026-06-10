@@ -1,5 +1,5 @@
 """
-20/07/25
+30/07/25
 --------
 
 Plot HighResMIP trend in tail widths calculated by HighResMIP_trend_calc.py.
@@ -11,7 +11,6 @@ These are loaded here to add stippling to the trend map.
 
 To run: 'python HighResMIP_trend_plotter.py [Mode] [model [experiment] [member] [sig] [fdr|p]' # where fdr or p determines whether to use the 
 FDR-corrected significance mask or the raw p-value mask for stippling.
-
 """
 
 import iris
@@ -37,11 +36,12 @@ lat_minimum = -60
 lat_maximum = 90
 
 # Command-line arguments
-Mode = sys.argv[1]  # 'Coupled' or 'SST'
+Mode = sys.argv[1]  # 'Coupled' or 'SST' 
 model = sys.argv[2]
 experiment = sys.argv[3]
 member = sys.argv[4]
 sig = sys.argv[5]  # 'fdr' or 'p'
+
 datadir = f'/data/users/samuel.sancar/Heat_extremes/Trends/{Mode}_model_trends/'
 
 if experiment=='hist-1950':
@@ -51,6 +51,7 @@ else:
 
 template = iris.load_cube('template_cube_1deg.nc')
 filename = f"{model}_{experiment}_{member}_tailwidth_trend_1958-2022.nc"
+
 cube = iris.load_cube(datadir + filename)
 p87p5_trend = iris.load_cube(datadir + filename.replace('tailwidth','p87p5'))
 

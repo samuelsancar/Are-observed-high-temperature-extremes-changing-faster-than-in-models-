@@ -1,3 +1,16 @@
+""" 
+15/11/2025
+----------
+
+CANARI region selection. Code applied all 4 conditions to each grid point for each member, and then plotted the area that passed all 4 conditions 
+for each member in a histogram, with vertical lines for ERA5 and member 29. 
+It also plotted maps of the number of conditions that were true for each grid point for ERA5 and member 29.
+
+To run: python CANARI_region_selection.py [iterate|era5|<member_no.>]
+
+'iterate' produces the histogram (figure 3e), while the other two produce the maps (figure 3f).
+"""
+
 import iris
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +30,7 @@ t1 = 1958
 t2 = 2023
 
 lat_minimum = -60
-lat_maximum = 80
+lat_maximum = 60
 
 template = iris.load_cube('template_cube_1deg.nc')
 
