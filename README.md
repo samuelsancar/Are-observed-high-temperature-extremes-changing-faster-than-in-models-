@@ -4,8 +4,7 @@ This repository contains the code required to reproduce all main and supplementa
 
 ## Overview
 
-Given the required data, this code calculates the tail widths trends of daily maximum temperatures from 3 reanalyses, 1 observational dataset (not included in paper), 63 HighResMIP members (multiple models), 
-and one single model initial condition large ensemble (SMILE) from the CANARI project (HadGEM3-GC31-MM model).
+Given the required data, this code calculates and analyses the tail widths trends of daily maximum temperatures (over the period 1958-2022) from 3 reanalyses, 1 observational dataset (not included in paper), 63 HighResMIP members (multiple models), and 40 members from a single model initial condition large ensemble (SMILE) from the CANARI project (HadGEM3-GC31-MM model).
 
 ## Data and directories
 
@@ -13,7 +12,7 @@ and one single model initial condition large ensemble (SMILE) from the CANARI pr
 - Code is setup to calculate tail width trends from the raw imported files of daily maximum temperatures from each reanalysis. Each reanalysis must be stored in individual directories.
 - Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/[reanalysis].
   
-### Observational Dataset: BerkeleyEarth (not perr reviewed, neither is there formal documentation, therefore not included in paper).
+### Observational Dataset: BerkeleyEarth (not peer reviewed, neither is there formal documentation, therefore not included in paper).
 - Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/BerkeleyEarth.
   
 ### HighResMIP: Details are found in the Model_table.xlsx.
