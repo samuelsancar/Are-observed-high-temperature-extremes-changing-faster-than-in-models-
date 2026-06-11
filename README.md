@@ -55,6 +55,9 @@ HighResMIP_tailwidths.py -> HighResMIP_stack.py -> HighResMIP_calc.py -> HighRes
 CANARI_tailwidths.py -> CANARI_trend_calc.py -> CANARI_MKtest.py -> CANARI_trend_plotter.py -> CANARI_agreement.py -> CANARI_intercomparison.py (figure 3a-d) -> CANARI_region_selection.py (figure 3e & 3f)
 CANARI_region_analysis.py (figure 4a-i).
 
+## Extra analysis
+- Codee for extra analysis is available in the 'Extra_analysis' respository. Here we analyse and plot trends in the tail width of the BerkeleyEarth dataset.
+
 ## Clone the repository and install dependencies:
 
 ```bash
