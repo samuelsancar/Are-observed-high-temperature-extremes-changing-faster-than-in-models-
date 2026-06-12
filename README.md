@@ -8,7 +8,7 @@ Given the required data, this code calculates and analyses the tail widths trend
 
 ## Data and directories
 
-### Reanalyses: ERA5. JRA-55, MERRA.
+### Reanalyses: ERA5, JRA-55, MERRA.
 - Code is setup to calculate tail width trends from the raw imported files of daily maximum temperatures from each reanalysis. Each reanalysis must be stored in individual directories.
 - Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/[reanalysis].
   
@@ -22,7 +22,7 @@ Given the required data, this code calculates and analyses the tail widths trend
 - Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/[Coupled|SST]/[Institution]/[member]. Therfore, each institution/model has it's own directory,
   with each member from each model having it's own directory within that (containing all the data). This can be changed
   
-### SMILE: HadGEM3-GC31, 40 members, from the CANARI project.
+### SMILE: HadGEM3-GC31-MM, 40 members, from the CANARI project.
 - Code is setup to calculate tail width trends from the raw imported files of daily maximum temperatures from each CANARI large ensemble member.
 -  Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/CANARI/[member]/.
 
