@@ -12,23 +12,22 @@ Given the required data, this code calculates and analyses the tail widths trend
 - Code is setup to calculate tail width trends from the raw imported files of daily maximum temperatures from each reanalysis. Each reanalysis must be stored in individual directories.
 - Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/[reanalysis].
   
-### Observational Dataset: BerkeleyEarth (not peer reviewed, neither is there formal documentation, therefore not included in paper).
+### Observational Dataset: BerkeleyEarth (This dataset is not formally documented or peer-reviewed and is therefore not included in the main analysis).
 - Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/BerkeleyEarth.
   
 ### HighResMIP: Details are found in the Model_table.xlsx.
 - Code is setup to calculate tail width trends from the raw imported files of daily maximum temperatures from each HighResMIP member.
-- Excel spread sheet of model members and their details is supplied. Code utilises this spreadsheet to read in correct members from the correct directories. Spreadsheet can be modified to suit the members availabel
-  to user.
-- Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/[Coupled|SST]/[Institution]/[member]. Therfore, each institution/model has it's own directory,
-  with each member from each model having it's own directory within that (containing all the data). This can be changed
+- Excel spread sheet of model members and their details is supplied. Code utilises this spreadsheet to read in correct members from the correct directories. The spreadsheet can be modified to reflect the subset of model members available to the user.
+- Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/[Coupled|SST]/[Institution]/[member]. Therfore, each institution/model has it's own directory, with each member from each model having it's own directory within that (containing all the data). This can be changed
   
 ### SMILE: HadGEM3-GC31-MM, 40 members, from the CANARI project.
 - Code is setup to calculate tail width trends from the raw imported files of daily maximum temperatures from each CANARI large ensemble member.
 -  Directories are set up so that data must be saved to the following convention: /data/users/samuel.sancar/Climate_models/CANARI/[member]/.
 
-Access to the required data can be found in the 'Data availability statement' of the paper.
+Due to data volume and access restrictions, datasets are not included in this repository.  
+Users should refer to the Data Availability Statement in Sancar et al. (2026) for where to access data.
 
-Directories throughout analysis can be changed to suit user.
+Directory paths can be modified within the scripts to suit local configurations.
 
 ## Main workflow
 
@@ -56,11 +55,7 @@ CANARI_tailwidths.py -> CANARI_trend_calc.py -> CANARI_MKtest.py -> CANARI_trend
 CANARI_region_analysis.py (figure 4a-i).
 
 ## Extra analysis
-- Codee for extra analysis is available in the 'Extra_analysis' respository. Here we analyse and plot trends in the tail width of the BerkeleyEarth dataset.
+- Code for extra analysis is available in the 'Extra_analysis' respository. Here we analyse and plot trends in the tail width of the BerkeleyEarth dataset.
 
-## Clone the repository and install dependencies:
 
-```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
-pip install -r requirements.txt
+
