@@ -4,7 +4,7 @@ This repository contains the code required to reproduce all main and supplementa
 
 ## Overview
 
-Given the required data, this code calculates and analyses the tail widths trends of daily maximum temperatures (over the period 1958-2022) from 3 reanalyses, 1 observational dataset (not included in paper), 63 HighResMIP members (multiple models), and 40 members from a single model initial condition large ensemble (SMILE) from the CANARI project (HadGEM3-GC31-MM model).
+Given the required data, this code calculates and analyses the tail widths trends of daily maximum temperatures (over the period 1958-2022) from: ERA5, JRA-55, MERRA2, BerkeleyEarth (not included in paper), 63 HighResMIP members (from multiple models), and 40 members from a single model initial condition large ensemble (SMILE) from the CANARI project (HadGEM3-GC31-MM model).
 
 ## Data and directories
 
