@@ -1,3 +1,8 @@
+## (C) Crown Copyright, Met Office. All rights reserved.
+##
+## This file is part of 'Are observed high temperature extremes changing faster than in models?' and is released under the BSD 3-Clause license.
+## See LICENSE in the root of the repository for full licensing details.
+
 # Are high temperature extremes changing faster than in models?
 
 This repository contains the code required to reproduce all main and supplementary figures from Sancar et al 2026.
