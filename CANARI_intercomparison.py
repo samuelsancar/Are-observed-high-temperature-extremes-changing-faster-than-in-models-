@@ -90,7 +90,9 @@ if member.lower() == "era5":
 
     # Percent of stack <= ERA5 
     agreement = np.mean(np.ma.filled(model_stack <= era5_masked, False), axis=0)
-    agreement = np.ma.array(agreement, mask=np.ma.getmaskarray(era5_masked))  # keep domain mask
+    agreement = np.ma.array(agreement, mask=np.ma.getmaskarray(era5_masked)) 
+
+    np.save(['/data/users/samuel.sancar/Heat_extremes/Trends/Trend_agreement/Model_agreement/‘ + f’CANARI_ERA5_agreement_field.npy', agreement.filled(np.nan))
 
     # Plot map
     fig = plt.figure(figsize=(12, 6))
@@ -145,9 +147,8 @@ else:
             continue
 
         # Load p87p5 for this member and mask it for stippling
-        canari_p87p5 = iris.load_cube(
-            f"/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{model_name}_p87p5_trend_{t1}-{t2-1}.nc"
-        )
+        canari_p87p5 = iris.load_cube(f"/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/{model_name}_p87p5_trend_{t1}-{t2-1}.nc")
+        
         p87p5_masked_cube, _ = lat_land_mask(canari_p87p5, template, lat_minimum, lat_maximum)
         p87p5_masked = p87p5_masked_cube.data
 
@@ -164,7 +165,9 @@ else:
 
         # Percent of stack <= target
         agreement = np.mean(np.ma.filled(model_stack <= target, False), axis=0)
-        agreement = np.ma.array(agreement, mask=np.ma.getmaskarray(target))  # preserve domain
+        agreement = np.ma.array(agreement, mask=np.ma.getmaskarray(target)) 
+
+        np.save('/data/users/samuel.sancar/Heat_extremes/Trends/CANARI_trends/‘+ f’{model_name}_trend_agreement.npy’, agreement.filled(np.nan))
 
         # Plot
         fig = plt.figure(figsize=(12, 6))
